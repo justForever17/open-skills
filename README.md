@@ -115,34 +115,48 @@ pip install -e .
 
 ### 3. Configure MCP
 
-We support two connection modes: **Stdio** and **SSE (Server-Sent Events)**.
-Choose the one that fits your client.
+We recommend using **SSE (Server-Sent Events)** mode as it supports remote connections and is easier to debug.
+
+#### 🚀 Mode A: SSE (Recommended - HTTP Server)
+
+First, start the HTTP server:
+
+```bash
+# Requires uvicorn (pip install uvicorn)
+uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
+Then, configure your client:
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "serverUrl": "http://localhost:8000/sse"
+    }
+  }
+}
+```
+
+#### 📁 Workspace Binding
+
+By default, the workspace is bound to the current directory where you run `uvicorn`.
+To specify a different directory, use the `.env` file in the project root:
+
+1. Copy template: `cp env.template .env`
+2. Update config:
+
+```bash
+# .env
+HOST_WORK_DIR="E:\Your_Projects"
+```
 
 <details>
-<summary><strong>Mode A: Stdio (Recommended - Claude Desktop / VSCode)</strong></summary>
+<summary><strong>Mode B: Stdio (Legacy - Claude Desktop / VSCode)</strong></summary>
 
 This is the standard mode where the server starts automatically with the host app.
 
 **Critical Point**: You MUST explicitly specify `cwd` (Current Working Directory), otherwise generated files will end up in your home directory!
-
-#### 3. Configure MCP
-
-Open Skills supports configuring the workspace directory via `.env`.
-
-**Step 1**: Create a `.env` file in the project root:
-
-```bash
-cp env.template .env
-```
-
-**Step 2**: Edit `.env` to set your desired workspace path:
-
-```bash
-# Explicitly bind a folder to /share
-HOST_WORK_DIR="/path/to/your/custom/workspace"
-```
-
-Then add this to your `claude_desktop_config.json`:
 
 #### Windows
 
@@ -154,7 +168,7 @@ Add to `claude_desktop_config.json`:
     "open-skills": {
       "command": "python",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "E:\\Projects\\YourCurrentProject" 
+      "cwd": "E:\\Your_Projects" 
     }
   }
 }
@@ -169,31 +183,6 @@ Add to `claude_desktop_config.json`:
       "command": "python3",
       "args": ["-m", "open_skills.cli"],
       "cwd": "/home/user/projects/your-project"
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>Mode B: SSE (HTTP Server)</strong></summary>
-
-For remote connections or clients that imply SSE support.
-First, start the HTTP server:
-
-```bash
-# Requires uvicorn (pip install uvicorn)
-uvicorn open_skills.cli:mcp.sse_app --port 8000
-```
-
-Then, configure your client:
-
-```json
-{
-  "mcpServers": {
-    "open-skills": {
-      "url": "http://localhost:8000/sse"
     }
   }
 }

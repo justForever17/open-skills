@@ -226,6 +226,36 @@ def write_file(path: str, content: str) -> str:
     return sandbox_manager.write_file(path, content)
 
 @mcp.tool()
+def list_directory(path: str = "/share") -> str:
+    """
+    Lists files and directories in the specified path (sandbox).
+    Default is /share (Workspace Root).
+    
+    Args:
+        path: Absolute path in the container (e.g. /share or /share/subdir).
+    """
+    # Simply use execute_command("ls -F") for robust output
+    # -F adds / to directories, * to executables, etc.
+    try:
+        # Security: Normalize path
+        target_path = path if path.startswith("/") else f"/share/{path}"
+        
+        # Check basic jail (handled by sandbox execute but explicit check is good)
+        if not (target_path.startswith("/share") or target_path.startswith("/app/skills")):
+             return "Error: Permission denied. You can only list /share or /app/skills."
+
+        exit_code, output = sandbox_manager.execute_command(f"ls -F {target_path}")
+        if exit_code != 0:
+            return f"Error listing directory: {output}"
+            
+        if not output.strip():
+            return "(Directory is empty)"
+            
+        return f"Contents of {target_path}:\n{output}"
+    except Exception as e:
+        return f"Error: {str(e)}"
+
+@mcp.tool()
 def manage_skills(action: str, skill_name: str = None) -> str:
     """
     The Librarian Tool to discover and learn skills.

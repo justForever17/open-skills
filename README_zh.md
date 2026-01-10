@@ -115,11 +115,44 @@ pip install -e .
 
 ### 3. 配置 MCP (Configure)
 
-我们支持两种连接模式：**Stdio (标准输入输出)** 和 **SSE (Server-Sent Events)**。
-请根据您的客户端支持情况选择。
+我们推荐使用 **SSE (Server-Sent Events)** 模式，它支持远程连接且调试更方便。
+
+#### 🚀 模式 A: SSE (推荐 - HTTP Server)
+
+首先，启动 HTTP 服务：
+
+```bash
+# 使用 uvicorn 启动 (需 pip install uvicorn)
+uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
+然后，在支持 SSE 的客户端中配置：
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "serverUrl": "http://localhost:8000/sse"
+    }
+  }
+}
+```
+
+#### 📁 工作区绑定 (Workspace Binding)
+
+默认情况下，工作区绑定在您运行 `uvicorn` 命令的当前目录。
+要指定其他目录，请使用项目根目录下的 `.env` 文件：
+
+1. 复制模板：`cp env.template .env`
+2. 修改配置：
+
+```bash
+# .env
+HOST_WORK_DIR="E:\Your_Projects"
+```
 
 <details>
-<summary><strong>模式 A: Stdio (推荐 - Claude Desktop / VSCode)</strong></summary>
+<summary><strong>模式 B: Stdio (兼容模式 - Claude Desktop / VSCode)</strong></summary>
 
 这是最通用的模式，服务随宿主应用自动启动。
 
@@ -135,7 +168,7 @@ pip install -e .
     "open-skills": {
       "command": "python",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "E:\\Projects\\YourCurrentProject" 
+      "cwd": "E:\\Your_Projects" 
     }
   }
 }
@@ -150,31 +183,6 @@ pip install -e .
       "command": "python3",
       "args": ["-m", "open_skills.cli"],
       "cwd": "/home/user/projects/your-project"
-    }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><strong>模式 B: SSE (HTTP Server)</strong></summary>
-
-如果您需要远程连接，或客户端仅支持 SSE。
-首先，启动 HTTP 服务：
-
-```bash
-# 使用 uvicorn 启动 (需 pip install uvicorn)
-uvicorn open_skills.cli:mcp.sse_app --port 8000
-```
-
-然后，在支持 SSE 的客户端中配置：
-
-```json
-{
-  "mcpServers": {
-    "open-skills": {
-      "url": "http://localhost:8000/sse"
     }
   }
 }

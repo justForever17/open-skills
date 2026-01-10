@@ -53,9 +53,9 @@ uv run open_skills/cli.py
 
 ### Q: 支持 SSE (Server-Sent Events) 模式吗？
 
-**A: 支持。**
+**A: 支持，且极其推荐！**
 
-我们使用的 `FastMCP` 框架原生支持 SSE。如果您需要通过 HTTP/SSE 暴露服务（而不是 stdio），可以使用 `uvicorn` 启动：
+我们使用的 `FastMCP` 框架原生支持 SSE。如果您需要通过 HTTP/SSE 暴露服务（推荐方式），可以使用 `uvicorn` 启动：
 
 ```bash
 # 需要先安装 uvicorn (pip install uvicorn)
@@ -84,15 +84,21 @@ $env:HOST_WORK_DIR="E:\Projects\MyTarget"; uvicorn open_skills.cli:mcp.sse_app -
 
 ### Q: 为什么 Agent 提示文件生成成功了，但我找不到文件？
 
-**A: 极大概率是因为没有在 MCP 配置中指定 `cwd`。**
+**A: 极大概率是因为工作区未正确绑定。**
 
-如果不设置 `cwd`，Open Skills 默认会以启动它的父进程目录（通常是 VSCode 的安装目录或用户主目录 `C:\Users\xxx`）作为工作区。Agent 生成的文件其实都静静地躺在你的 C 盘用户目录下。
+如果不配置工作区，Open Skills 默认会以启动目录（或用户主目录）作为 `/share`。文件其实都生成到了那个默认目录下。
 
-**解决**: 在 MCP 配置文件 (`mcp.json` / `claude_desktop_config.json`) 中显式指定：
+**解决**:
 
-```json
-"cwd": "E:\\Projects\\你的具体项目路径"
+**方法 1: 使用 .env (推荐 - 适用于 SSE/Stdio)**
+请确保open-skills项目根目录下有 `.env` 文件，并配置了路径：
+
+```bash
+HOST_WORK_DIR="E:\Your_Projects"
 ```
+
+**方法 2: MCP 配置 cwd (仅 Stdio)**
+在 `claude_desktop_config.json` 中显式指定 `"cwd"` 参数。
 
 ### Q: Agent 总是通过相对路径瞎操作，导致找不到文件怎么办？
 
