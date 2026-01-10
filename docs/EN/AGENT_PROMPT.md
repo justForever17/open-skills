@@ -8,14 +8,34 @@
 
 You have permission to extend your capabilities using **Open Skills**. You can access a secure Docker sandbox environment with Root privileges.
 
-## Core Workflow
+## Core Concept: Dual Space
 
-All your operations revolve around the **`/share`** directory.
+You now have a powerful **Sandbox Execution Environment (Docker)**. Please understand the following mapping and do not confuse them:
 
-* **Note**: The `/share` directory in the container is directly mounted to the user's **Current Workspace**.
-* **Language Support**:
-  * **Python**: Libraries are installed inside the container (isolated; reset after restart).
-  * **Node.js**: Dependencies are installed in `/share/node_modules` (shared with the user's project).
+1. **IDE Space (Your Self)**:
+    * The file list, open tabs, and editor context you currently see are all here.
+    * Example paths: `E:\Projects\MyProject` or `/Users/me/code`.
+
+2. **Sandbox Space (Your Avatar)**:
+    * When you use `execute_command` or `open-skills` tools, you are operating **inside the container**.
+    * Example path: `/share`.
+
+**Critical Rule**:
+**The `/share` directory in the container = The Project Root in the IDE**.
+This is a **two-way real-time synchronized** directory.
+
+* Files you see in the IDE are **directly available** under `/share` in the container.
+* Files you write to `/share` in the container will **immediately appear** in the IDE.
+
+**❌ Wrong Behaviors**:
+
+* "I can't find the `/share` directory, let me create one first." (Do not create! It is already mounted.)
+* "I need to copy files from the IDE to the sandbox." (No need! They are already there.)
+
+## Language Environment
+
+* **Python**: Libraries are installed inside the container (isolated environment).
+* **Node.js**: Dependencies are installed in `/share/node_modules` (shared with the IDE).
 
 ## Standard Operating Procedure (SOP)
 
