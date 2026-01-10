@@ -2,17 +2,6 @@
 
 这里汇总了开发者在使用 Open Skills 时最常遇到的问题与核心概念解析。
 
-## 📂 项目结构
-
-### Q: 为什么目录里有个 `open-skills` 还有个 `open_skills`？是套娃吗？
-
-**A: 这不是套娃，是 Python 的标准打包规范。**
-
-* **外层 `open-skills` (带横线)**: 这是 **项目名 (Project Root)**。用于 GitHub 仓库名和 PyPI 包名。为了方便人类阅读，通常使用 `kebab-case`。这里存放 `pyproject.toml`, `README.md` 等配置文档。
-* **内层 `open_skills` (带下划线)**: 这是 **源码包名 (Import Name)**。因为 Python 语法**禁止**在 `import` 语句中使用减号（会变成减法运算），所以必须使用下划线 `snake_case`。
-
-> 你的代码里 `import open_skills`，但安装时 `pip install open-skills`。
-
 ## ⚙️ 配置与使用
 
 ### Q: 为什么 Agent 提示文件生成成功了，但我找不到文件？
@@ -29,59 +18,84 @@
 
 ### Q: Agent 总是通过相对路径瞎操作，导致找不到文件怎么办？
 
-**A: 请使用我们提供的“操作手册”进行 Context 注入。**
-有些模型缺乏空间感知能力。请在对话时直接引用 `@AGENT_GUIDE.md`（项目根目录下）。这份指南会明确告诉 Agent：
-> "你的 `/share` 目录就是我的当前目录，请务必使用绝对路径操作。"
+**A: 现在无需担心！我们内置了“智能适配层 (Smart Adapter)”。**
+
+以前确实需要手动注入指南。但在最新版本中，当 Agent 读取技能的 `SKILL.md` 时，系统会**自动**将脚本中的相对路径（如 `scripts/run.py`）动态替换为容器内的绝对路径（如 `/app/skills/ppt/scripts/run.py`）。
+
+这意味着：即使是很"笨"的模型，也能开箱即用，无需额外提示。
+
+---
 
 ## 📦 依赖与环境
 
-### Q: Agent 可以自己安装 Python/Node 依赖吗？会污染我的环境吗？
+### Q: Agent 可以自己安装 Python/Node 依赖吗？
 
-**A: 可以，且绝对安全。**
+**A: 可以，但我们推荐“开箱即用”模式。**
 
-* **机制**: Open Skills 采用了 "Polyglot Runtime"。Agent 拥有 Root 权限，可以随时执行 `pip install` 或 `npm install`。
-* **隔离**:
-  * **Python 包**: 安装在 Docker 容器内部。**完全隔离**，不会污染你的宿主机。重启 Open Skills 服务后，容器重置，这些临时包会自动消失（但我们有缓存加速下载）。
-  * **Node 包**: 安装在当前工作区的 `node_modules` 下。这符合 Node.js 开发习惯，方便你后续使用这些代码。
+1. **Batteries Included (推荐)**: 我们的镜像已经预装了 `pandas`, `numpy`, `playwright`, `libreoffice`, `markitdown` 等 90% 的常用重型依赖。Agent 直接 import 即可，速度极快。
+2. **动态安装**: 如果确实缺包，Agent 仍然可以执行 `pip install --user <package>`。
+    * **注意**: 这是一个 **Guest (非 Root)** 环境，所以不能安装系统级软件（如 `apt-get` 被禁用），但这足以满足绝大多数 Python/Node 需求。
 
 ### Q: 这里的 Docker 容器有什么挂载权限？
 
-**A: 权限设计遵循“最小权限 + 实用主义”原则。**
+**A: 权限设计遵循“最小权限 + 路径沙箱”原则。**
+
+我们实现了 **Path Jail (路径越狱防御)**，Agent 的文件操作被严格限制在以下目录：
 
 | 路径 | 权限 | 说明 |
 | :--- | :--- | :--- |
 | `/app/skills` | **只读 (RO)** | 技能库代码。Agent 只能看，不能改，防止破坏工具。 |
 | `/share` | **读写 (RW)** | **工作区**。直接映射到你配置的 `cwd`。这是 Agent 唯一能写文件的地方。 |
 
-## 💾 数据持久化与安全性
+---
 
-### Q: 容器退出后，哪些文件会保留？哪些会消失？
+## � 常见报错 (Troubleshooting)
+
+### Q: 启动时报错 `RuntimeError: Docker image ... not found`？
+
+**A: 这是因为您开启了“极速启动模式”，需要先手动构建镜像。**
+
+为了避免每次启动都在后台偷偷跑几分钟的构建流程，我们现在要求显式构建。请在终端运行一次：
+
+```powershell
+docker build -t open-skills:latest open_skills/
+```
+
+构建一次即可长期使用。
+
+### Q: 报错 `Security Alert: Access denied to path ...`？
+
+**A: 这是一个安全拦截特性。**
+
+说明 Agent 试图访问允许范围（`/share` 或 `/app/skills`）之外的文件（例如试图读取 `/etc/passwd` 或 `C:\Windows`）。这是预期的安全行为，保护您的主机不受恶意 Prompt 攻击。
+
+### Q: Agent 无法连接我本地运行的数据库 (Connection Refused)？
+
+**A: 请告诉 Agent 使用环境变量 `$HOST_IP`。**
+
+容器内的 `localhost` 指向的是容器自己。为了访问宿主机，我们在启动时自动探测了宿主机 IP 并注入到了环境变量 `HOST_IP` 中。
+
+**正确写法**:
+
+```python
+# 错误
+db.connect(host="localhost", ...)
+
+# 正确
+import os
+db.connect(host=os.getenv("HOST_IP"), ...)
+```
+
+---
+
+## 💾 数据持久化
+
+### Q: 容器退出后，哪些文件会保留？
 
 **A: 只有“工作区”和“缓存”会保留。**
 
-1. **✅ 会保留 (Persistent)**:
-    * **您的项目文件 (`/share`)**: 所有 Agent 生成的代码、文档、PPT，都直接保存在您的硬盘上，永久有效。
-    * **依赖缓存 (`/root/.cache`)**: `pip` 和 `npm` 的下载缓存保存在 Docker Volume 中，即使删除容器，下次安装也不用重新下载。
-
-    **依赖缓存具体存在哪？**
-    * **容器内**:
-        * `pip`: `/root/.cache/pip`
-        * `npm`: `/root/.npm`
-    * **宿主机 (Host)**: 这是一个 **Docker 命名卷 (Named Volume)**，由 Docker 引擎托管。
-        * **Linux**: 通常在 `/var/lib/docker/volumes/open-skills-pip-cache/_data`
-        * **Windows (Docker Desktop)**: 存储在 WSL2 虚拟机内部 (如 `docker-desktop-data`)，无法直接在文件资源管理器访问。若需查看信息，请运行：
-
-            ```bash
-            docker volume inspect open-skills-pip-cache
-            ```
-
-2. **❌ 会消失 (Ephemeral)**:
-    * **容器系统文件**: 安装在容器系统目录 (如 `/usr/local/lib/...` ) 的 Python 包，在容器重启/重建后会被重置。这保证了运行环境永远是干净的 "Day 1" 状态。
-
-### Q: Agent 能修改技能代码吗？（比如偷偷改掉官方的 Skill）
-
-**A: 绝无可能 (Immutable)。**
-
-技能目录 `/app/skills` 是以 **Read-Only (只读)** 模式挂载到容器里的。
-如果 Agent 试图执行 `echo "hack" > /app/skills/official/SKILL.md`，Docker 内核会直接拦截并报错：`Read-only file system`。
-这也是我们安全设计的底线。
+1. **✅ 会保留**:
+    * **您的项目文件 (`/share`)**: 也就是您的 `cwd` 目录。
+    * **依赖缓存**: `pip` 和 `npm` 的下载缓存保存在 Docker Volume 中，二次安装极快。
+2. **❌ 会消失**:
+    * **容器系统变更**: 任何对 `/home/guest` 以外的修改都会在重启后重置，保证环境永远纯净。

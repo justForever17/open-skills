@@ -41,9 +41,12 @@ open-skills/
 │   ├── sandbox.py             # Docker container manager
 │   ├── Dockerfile             # Batteries-included image definition
 │   └── skills/                # Skills library (Put your Skills here)
-├── README.md                  # Chinese Documentation
-├── README_en.md               # English Documentation
-└── AGENT_GUIDE.md             # [Prompt] Operation Manual for Agents
+├── docs/                      # [Docs] Documentation & Guides
+│   ├── EN/                    # English Documentation
+│   └── ZH/                    # Chinese Documentation
+├── README.md                  # English Documentation
+├── README_zh.md               # Chinese Documentation
+└── LICENSE                    # MIT License
 ```
 
 ## 🛠️ Toolbox
@@ -53,15 +56,15 @@ Once connected to the Open Skills MCP service, your Agent gains the following su
 - 📚 **`manage_skills`**: **Skills Librarian**. List and view detailed documentation for available skills (with automatic sandbox path injection).
 - 💻 **`execute_command`**: **Execution Engine**. Run Bash commands (Python, Node, Shell, etc.) inside the secure container.
 - 📂 **`read_file` / `write_file`**: **File Operations**. Securely read and write files in the workspace (`cwd`).
-- ☁️ **`upload_to_s3` / `download_from_s3`**: **Cloud Transfer**. Enable file transfer with S3 by simply configuring `.env`.
+- ☁️ **`upload_to_s3` / `download_from_s3`**: **Cloud Transfer**. After configuring .env, the agent can automatically transfer files to and from S3.
 
 ## 💡 Best Practices
 
-### Making Agents "Smarter"
+### Adapting Agents to the Sandbox Environment
 
-Sometimes Agents get confused about the relationship between the sandbox and the host. We provide a **Prompt Guide**. When chatting, tell the Agent:
+Since we have completely decoupled the system-level execution environment of Skills, redesigned the sandbox mechanism, and converted it into an MCP tool, I suggest adding a **Prompt Secret** to your Agent Prompt to help it better master the sandbox environment.
 
-> "Please read **`AGENT_GUIDE.md`** in the project root, and then help me handle..."
+[Agent Guide (MD)](docs/EN/AGENT_PROMPT.md) > Insert this prompt into your original System Prompt.
 
 **This solves:**
 
@@ -132,3 +135,7 @@ Add to `claude_desktop_config.json`:
 <div align="center">
 Made with ❤️ for the Agentic Future
 </div>
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).

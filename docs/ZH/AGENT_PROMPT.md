@@ -1,6 +1,6 @@
 # Open Skills Agent 指南 (System Prompt)
 
-> **给用户**: 如果你使用的 AI (如 Cursor, Windsurf, Copilot) 不知道如何使用 Open Skills，请将本文件内容作为 Context 发送给它 (例如 `@AGENT_GUIDE.md`)。
+> **注意**: 如果你使用的 AI (如 Cursor, Windsurf, Copilot) 不知道如何使用 Open Skills，请将本文内容作为 System Prompt 添加到它原有的提示词中。
 
 ---
 
