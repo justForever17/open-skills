@@ -4,6 +4,45 @@
 
 ## ⚙️ 配置与使用
 
+### Q: 必须使用 `pip install -e .` 安装吗？
+
+**A: 不是必须的。**
+
+`install` 主要是为了将 `open-skills` 命令注册到系统路径，方便全局调用。
+如果您不想安装，完全可以使用绝对路径直接运行 Python 脚本（只要依赖装好了）：
+
+```bash
+# 假设您在项目根目录
+python open_skills/cli.py
+```
+
+或者使用现代化的 Python 工具 `uv` (推荐):
+
+```bash
+uv run open_skills/cli.py
+```
+
+### Q: 支持 SSE (Server-Sent Events) 模式吗？
+
+**A: 支持。**
+
+我们使用的 `FastMCP` 框架原生支持 SSE。如果您需要通过 HTTP/SSE 暴露服务（而不是 stdio），可以使用 `uvicorn` 启动：
+
+```bash
+# 需要先安装 uvicorn (pip install uvicorn)
+# 这里的 'mcp' 是 cli.py 中的变量名
+uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
+这样您就可以通过 `http://localhost:8000/sse` 连接服务了。
+
+**注意**: SSE 模式下，默认的工作区是您**运行命令的当前目录**。如果需要指定其他目录，请设置环境变量 `HOST_WORK_DIR`：
+
+```bash
+# PowerShell
+$env:HOST_WORK_DIR="E:\Projects\MyTarget"; uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
 ### Q: 为什么 Agent 提示文件生成成功了，但我找不到文件？
 
 **A: 极大概率是因为没有在 MCP 配置中指定 `cwd`。**

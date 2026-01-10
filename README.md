@@ -98,9 +98,17 @@ pip install -e .
 
 ### 3. Configure MCP
 
-**Critial Point**: You MUST explicitly specify `cwd` (Current Working Directory), otherwise generated files will end up in your home directory!
+We support two connection modes: **Stdio** and **SSE (Server-Sent Events)**.
+Choose the one that fits your client.
 
-#### Windows (Claude Desktop / VSCode)
+<details>
+<summary><strong>Mode A: Stdio (Recommended - Claude Desktop / VSCode)</strong></summary>
+
+This is the standard mode where the server starts automatically with the host app.
+
+**Critical Point**: You MUST explicitly specify `cwd` (Current Working Directory), otherwise generated files will end up in your home directory!
+
+#### Windows
 
 Add to `claude_desktop_config.json`:
 
@@ -129,6 +137,33 @@ Add to `claude_desktop_config.json`:
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>Mode B: SSE (HTTP Server)</strong></summary>
+
+For remote connections or clients that imply SSE support.
+First, start the HTTP server:
+
+```bash
+# Requires uvicorn (pip install uvicorn)
+uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
+Then, configure your client:
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "url": "http://localhost:8000/sse"
+    }
+  }
+}
+```
+
+</details>
 
 ---
 

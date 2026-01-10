@@ -98,9 +98,17 @@ pip install -e .
 
 ### 3. 配置 MCP (Configure)
 
+我们支持两种连接模式：**Stdio (标准输入输出)** 和 **SSE (Server-Sent Events)**。
+请根据您的客户端支持情况选择。
+
+<details>
+<summary><strong>模式 A: Stdio (推荐 - Claude Desktop / VSCode)</strong></summary>
+
+这是最通用的模式，服务随宿主应用自动启动。
+
 **关键点**: 必须显式指定 `cwd` (当前工作目录)，否则生成的文件会跑到用户主目录去！
 
-#### Windows (Claude Desktop / VSCode)
+#### Windows
 
 在 `claude_desktop_config.json` 中添加：
 
@@ -129,6 +137,33 @@ pip install -e .
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>模式 B: SSE (HTTP Server)</strong></summary>
+
+如果您需要远程连接，或客户端仅支持 SSE。
+首先，启动 HTTP 服务：
+
+```bash
+# 使用 uvicorn 启动 (需 pip install uvicorn)
+uvicorn open_skills.cli:mcp.sse_app --port 8000
+```
+
+然后，在支持 SSE 的客户端中配置：
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "url": "http://localhost:8000/sse"
+    }
+  }
+}
+```
+
+</details>
 
 ---
 

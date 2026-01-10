@@ -1,5 +1,15 @@
 
+import sys
+import os
+
+# Allow running this script directly without pip install (No-Install Mode)
+# This inserts the project root directory into sys.path so 'open_skills' package resolves
+if __name__ == "__main__" and __package__ is None:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    __package__ = "open_skills"
+
 from mcp.server.fastmcp import FastMCP
+
 from open_skills.sandbox import sandbox_manager
 import os
 import yaml
