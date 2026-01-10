@@ -1,0 +1,23 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environment
+venv/
+
+# Environment Variables
+
+.env
+
+# Docker system files (if any generated locally)
+# But Dockerfile should be committed.
+
+# Editor directories
+.idea/
+.vscode/
+
+# Logs
+*.log
+
