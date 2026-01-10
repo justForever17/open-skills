@@ -2,7 +2,36 @@
 
 这里汇总了开发者在使用 Open Skills 时最常遇到的问题与核心概念解析。
 
-## ⚙️ 配置与使用
+## ⚙️ 权限与环境 (Permissions & Env)
+
+### Q: 为什么无法使用 `sudo`？我需要 Root 权限吗？
+
+**A: 不需要，且为了安全被禁止了。**
+
+Open Skills 采用 **Agent User (uid=1000)** 模式运行。
+
+* **设计初衷**: 即使 AI 生成了恶意代码（如 `rm -rf /`），也只能删除容器内的临时文件，绝不可能破坏您的宿主机系统。
+* **实际影响**: 您无法运行 `apt-get` 安装新软件。
+* **解决方案**: 我们已经预装了 `playwright`, `libreoffice`, `ffmpeg` 等几乎所有常用工具。如果确实缺特定工具，请提交 Issue。
+
+### Q: 为什么我在代码里写可以 `require` 那些我没安装的包？
+
+**A:这是我们的 "Smart Node" 环境魔法。**
+
+我们通过配置 `NODE_PATH` 环境变量，让 Node.js 能够同时搜索：
+
+1. `/share/node_modules` (您的工作区)
+2. `/usr/lib/node_modules` (我们在 Docker 镜像里预装的全局包)
+
+这意味着您可以直接在脚本里 `require('pptxgenjs')` 或 `require('playwright')`，而完全不需要自己去跑 `npm install`。
+
+### Q: 如果我真的需要安装新的 npm 包怎么办？
+
+**A: 直接运行 `npm install <package_name>` 即可。**
+
+不要加 `-g` (全局) 参数。我们配置了 `NPM_CONFIG_PREFIX` 指向您的工作区。npm 会自动把包安装到您有写权限的目录下，并且配置好的 `NODE_PATH` 会立即识别到它。一切就像在本地开发一样自然。
+
+## ⚙️ 配置与使用 (Configuration)
 
 ### Q: 必须使用 `pip install -e .` 安装吗？
 
@@ -36,7 +65,17 @@ uvicorn open_skills.cli:mcp.sse_app --port 8000
 
 这样您就可以通过 `http://localhost:8000/sse` 连接服务了。
 
-**注意**: SSE 模式下，默认的工作区是您**运行命令的当前目录**。如果需要指定其他目录，请设置环境变量 `HOST_WORK_DIR`：
+**工作区绑定 (Workspace Binding):**
+SSE 模式下，默认的工作区是您**运行命令的当前目录**。如果需要指定其他目录，有两种方法：
+
+**方法 1: 使用 .env 文件 (推荐)**
+在项目根目录的 `.env` 文件中设置：
+
+```bash
+HOST_WORK_DIR="E:\Projects\MyTarget"
+```
+
+**方法 2: 临时环境变量**
 
 ```bash
 # PowerShell

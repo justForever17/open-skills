@@ -32,6 +32,23 @@ Open Skills 是一个基于 [Model Context Protocol (MCP)](https://modelcontextp
 | **🛡️ 沙盒隔离 (Sandbox Security)** | 所有代码均运行在**Docker 容器**中。Agent 只能访问隔离的 `/share` 目录，宿主机系统绝对安全。 |
 | **🔋 全能环境 (Batteries Included)** | 预装 Pandas, Numpy, Playwright, LibreOffice 等主流依赖。告别 `pip install` 的烦恼，专注于任务本身。 |
 
+## 🔐 安全与架构设计 (Architecture & Design)
+
+Open Skills 在安全性与易用性之间做了精心的平衡设计：
+
+### 1. Agent 权限模型 (The Agent Model)
+
+Agent 在容器内以 **`agent` (uid=1000)** 用户身份运行，而非 Root。
+
+* **权限边界**: 剥夺了破坏系统（如 `apt-get`, `rm -rf /bin`）的能力，但保留了所有创造性工作（代码读写、脚本执行）的权限。
+* **文件所有权**: `agent` 用户通过 Docker 挂载机制拥有 `/share` 工作区的完全读写权，确保 Agent 生成的文件在宿主机上也是普通用户权限，不会出现 "root user only" 的文件锁死问题。
+
+### 2. 智能 Node.js 环境 (Smart Node Setup)
+
+为了解决 "Agent 想装包但没权限" 的经典死锁，我们采用了 **Environment Injection** 设计：
+
+* **无感知安装**: 配置 `NPM_CONFIG_PREFIX="/share/.npm-global"`，当 Agent 执行 `npm install package` 时，包会被自动安装到它有写权限的 `/share` 下。Agent 以为它在装全局包，实际上它在装用户包——**Zero Config, Zero Error**。
+
 ## 📂 目录与架构
 
 ```text
@@ -53,10 +70,10 @@ open-skills/
 
 连接 Open Skills MCP 服务后，您的 Agent 将获得以下超能力：
 
-- 📚 **`manage_skills`**: **技能向导**。列出并查看可用技能的详细文档（自动注入沙盒路径）。
-- 💻 **`execute_command`**: **执行引擎**。在安全容器内运行 Bash 命令（Python, Node, Shell 等）。
-- 📂 **`read_file` / `write_file`**: **文件操作**。在工作区 (`cwd`) 安全地读写文件。
-- ☁️ **`upload_to_s3` / `download_from_s3`**: **云端传输**。配置 .env 后即可实现 agent 自动执行文件与 S3 的互传。
+* 📚 **`manage_skills`**: **技能向导**。列出并查看可用技能的详细文档（自动注入沙盒路径）。
+* 💻 **`execute_command`**: **执行引擎**。在安全容器内运行 Bash 命令（Python, Node, Shell 等）。
+* 📂 **`read_file` / `write_file`**: **文件操作**。在工作区 (`cwd`) 安全地读写文件。
+* ☁️ **`upload_to_s3` / `download_from_s3`**: **云端传输**。配置 .env 后即可实现 agent 自动执行文件与 S3 的互传。
 
 ## 💡 最佳实践
 
@@ -76,8 +93,8 @@ open-skills/
 
 **请勿在生产环境使用** `skill-creator` 等让 AI 自己写技能的工具。
 
-- **风险**: 绕过安全审查。
-- **建议**: **人工审查代码，AI 执行操作**。
+* **风险**: 绕过安全审查。
+* **建议**: **人工审查代码，AI 执行操作**。
 
 ## ⚡ 快速开始 (Quick Start)
 

@@ -6,7 +6,8 @@
 
 ## 角色设定
 
-你拥有通过 **Open Skills** 扩展自身能力的权限。你可以访问一个安全的 Docker 沙盒环境，并拥有 Root 权限。
+你拥有通过 **Open Skills** 扩展自身能力的权限。你可以访问一个安全的 Docker 沙盒环境。
+**注意：你在沙盒内是 普通用户 (Agent)，拥有 `/share` 目录的读写权限，但没有 Root 权限 (不可使用 sudo)。**
 
 ## 核心概念：双重空间 (Dual Space)
 
@@ -31,11 +32,14 @@
 
 * "我找不到 `/share` 目录，我先创建一个。" (不要创建！它已经挂载好了)
 * "我要把文件从 IDE 复制到沙盒。" (不需要！它们就在那里)
+* "我要用 sudo 安装库。" (禁止！你没有 sudo 权限。请直接 pip/npm install)
 
 ## 语言环境
 
-* **Python**: 库安装在容器内（隔离环境）。
-* **Node.js**: 依赖安装在 `/share/node_modules`（与 IDE 共享）。
+* **Python**: 常用库 (pandas, numpy, playwright, reportlab, etc.) 已经内置。
+  * 缺库时：`pip install <库名>` (会安装到用户目录)。
+* **Node.js**: 常用库 (pptxgenjs, playwright, sharp) 已经内置。
+  * 缺库时：`npm install <库名>` (我们已配置自动通过 `/share/.npm-global` 安装到当前工作区，无需 `-g` 或 sudo)。
 
 ## 操作步骤 SOP
 
@@ -49,7 +53,7 @@
 
 3. **依赖检查 (Self-Healing)**:
     * **Python**: 如果报错 `ModuleNotFoundError`，请直接执行 `execute_command("pip install <库名>")`。
-    * **Node.js**: 如果报错找不到模块，请执行 `execute_command("npm install <库名>")`。
+    * **Node.js**: 常用库已预装。如果报错找不到模块，请执行 `execute_command("npm install <库名>")`。
 
 4. **准备素材**:
     如果技能需要输入文件（如 content.json, data.csv），请使用 `write_file` 将它们写入 `/share` 目录（即当前工作区）。

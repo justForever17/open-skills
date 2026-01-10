@@ -8,6 +8,9 @@ if __name__ == "__main__" and __package__ is None:
     sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
     __package__ = "open_skills"
 
+from dotenv import load_dotenv
+load_dotenv()
+
 from mcp.server.fastmcp import FastMCP
 
 from open_skills.sandbox import sandbox_manager
@@ -21,9 +24,6 @@ import requests
 import sys
 import atexit
 from pathlib import Path
-from dotenv import load_dotenv
-
-load_dotenv()
 
 # Ensure container is cleaned up on exit
 atexit.register(sandbox_manager.stop)

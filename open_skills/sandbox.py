@@ -136,15 +136,15 @@ class SandboxManager:
                     self.to_posix(self.host_skill_path): {'bind': '/app/skills', 'mode': 'ro'},
                     self.to_posix(self.host_work_dir): {'bind': '/share', 'mode': 'rw'},
                     # Persistence for pip/npm cache
-                    'open-skills-pip-cache': {'bind': '/home/guest/.cache/pip', 'mode': 'rw'},
-                    'open-skills-npm-cache': {'bind': '/home/guest/.npm', 'mode': 'rw'},
+                    'open-skills-pip-cache': {'bind': '/home/agent/.cache/pip', 'mode': 'rw'},
+                    'open-skills-npm-cache': {'bind': '/home/agent/.npm', 'mode': 'rw'},
                 },
                 environment={
                     "HOST_IP": self.host_ip,
                     "SKILL_ROOT": "/app/skills" # Default Root
                 },
                 working_dir="/share",
-                user="guest", # Enforce non-root
+                user="agent", # Enforce non-root
                 security_opt=["no-new-privileges"], # Security Hardening
                 cap_drop=["ALL"], # Drop all capabilities
                 # cap_add=["NET_BIND_SERVICE"], # If needed later
@@ -160,15 +160,6 @@ class SandboxManager:
 
 
 
-    def stop(self):
-        """Stops the sandbox."""
-        if self.container:
-            try:
-                self.container.stop()
-            except:
-                pass
-            self.container = None
-
     def execute_command(self, command: str) -> Tuple[int, str]:
         """Executes a command inside the sandbox."""
         container = self.get_sandbox()
@@ -176,7 +167,7 @@ class SandboxManager:
         sys.stderr.write(f"[Exec] {command}\n")
         exit_code, output = container.exec_run(
             ["/bin/bash", "-c", command],
-            user="guest",
+            user="agent",
             demux=True 
         )
         
@@ -239,6 +230,18 @@ class SandboxManager:
             return "Success"
         except Exception as e:
             return f"Error writing file: {str(e)}"
+
+    
+    def stop(self):
+        """Stops and removes the sandbox container."""
+        if self.container:
+            try:
+                sys.stderr.write(f"[Sandbox] Stopping container {self.container.name}...\n")
+                self.container.stop()
+                self.container.remove()
+                self.container = None
+            except Exception as e:
+                sys.stderr.write(f"[Sandbox] Error stopping container: {e}\n")
 
 # Global Singleton Manager
 sandbox_manager = SandboxManager()
