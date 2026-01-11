@@ -113,6 +113,8 @@ cd apps/open-skills
 pip install -e .
 ```
 
+// 卸载 pip uninstall open-skills
+
 ### 3. 配置 MCP (Configure)
 
 我们推荐使用 **SSE (Server-Sent Events)** 模式，它支持远程连接且调试更方便。

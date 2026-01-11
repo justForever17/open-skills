@@ -22,6 +22,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["open_skills"]
+exclude = ["open_skills/skills"]
 
 [tool.hatch.build.targets.sdist]
 include = ["open_skills"]
+exclude = ["open_skills/skills"]

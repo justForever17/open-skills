@@ -361,6 +361,41 @@ HOST_IP: {os.getenv('HOST_IP', 'Auto-Detected')}
     return "Invalid action. Use 'list' or 'inspect'."
 
 def main():
+    import argparse
+    
+    # 1. Parse Arguments (Hybrid approach: mix of mcp params and ours)
+    # FastMCP uses click/typer internally, but mcp.run() usually takes over sys.argv.
+    # We need to peek at args first or filter them.
+    
+    parser = argparse.ArgumentParser(description="Open Skills MCP Server", add_help=False)
+    parser.add_argument("--skills-dir", type=str, help="Path to local skills directory", default=None)
+    parser.add_argument("--work-dir", type=str, help="Path to workspace directory", default=None)
+    
+    # Parse known args only, leaving the rest for mcp/uvicorn
+    args, unknown = parser.parse_known_args()
+    
+    # 2. Configure Sandbox Manager
+    if args.skills_dir:
+        custom_path = Path(args.skills_dir).resolve()
+        if not custom_path.exists():
+            print(f"Error: Custom skills directory '{custom_path}' does not exist.", file=sys.stderr)
+            sys.exit(1)
+        
+        # In-place update of the singleton
+        sandbox_manager.host_skill_path = custom_path
+        sys.stderr.write(f"[Config] Using custom skills path: {sandbox_manager.host_skill_path}\n")
+
+    if args.work_dir:
+        custom_work = Path(args.work_dir).resolve()
+        if not custom_work.exists():
+             custom_work.mkdir(parents=True, exist_ok=True)
+        sandbox_manager.host_work_dir = custom_work
+        sys.stderr.write(f"[Config] Using custom work dir: {sandbox_manager.host_work_dir}\n")
+
+    # 3. Clean sys.argv for FastMCP/Uvicorn
+    # Remove our arguments so FastMCP doesn't complain
+    sys.argv = [sys.argv[0]] + unknown
+
     # Run via Stdio (Standard Input/Output) for direct integration
     mcp.run()
 
