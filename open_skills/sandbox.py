@@ -124,6 +124,7 @@ class SandboxManager:
                 existing[0].remove(force=True)
 
             sys.stderr.write(f"[Sandbox] Starting container {self.container_name}...\n")
+            sys.stderr.write(f"[Sandbox] 🚀 Eager Initialization Triggered!\n")
             
             # Start Container
             self.container = self.client.containers.run(

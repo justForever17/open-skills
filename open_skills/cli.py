@@ -364,5 +364,30 @@ def main():
     # Run via Stdio (Standard Input/Output) for direct integration
     mcp.run()
 
+# --- LIFECYCLE MANAGEMENT MONKEYPATCH ---
+# Goal: Ensure sandbox container starts WHEN SERVER STARTS, and stops WHEN SERVER STOPS.
+# Strategy: Wrap the mcp.sse_app() factory to inject Starlette event handlers.
+
+_original_sse_app_factory = mcp.sse_app
+
+def sse_app_wrapper(**kwargs):
+    """
+    Wrapper around FastMCP's sse_app factory to inject lifecycle hooks.
+    This ensures eager sandbox creation and robust cleanup.
+    """
+    app = _original_sse_app_factory(**kwargs)
+    
+    # 1. Eager Startup: Create container immediately
+    app.add_event_handler("startup", sandbox_manager.get_sandbox)
+    
+    # 2. Robust Shutdown: Stop container on server exit
+    app.add_event_handler("shutdown", sandbox_manager.stop)
+    
+    return app
+
+# Overwrite the method on the instance so uvicorn calls our wrapper
+mcp.sse_app = sse_app_wrapper
+# ----------------------------------------
+
 if __name__ == "__main__":
     main()
