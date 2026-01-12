@@ -23,15 +23,15 @@ Open Skills 是一个基于 [Model Context Protocol (MCP)](https://modelcontextp
 
 1. **依赖地狱**: 不再需要为每个脚本配置复杂的 Python 环境，或者 agent 因为运行失败给你的本机安装大量不明依赖包，沙盒里预装了必要依赖并给予 agent 临时安装依赖包的权限，净化你的本机环境。
 
-2. **安全隐患**: 彻底杜绝 AI 修改系统文件或执行恶意代码的风险，沙盒环境挂载你的 `/skills` （只读）目录和工作区 `/share` （读写）目录，恶意代码运行在沙箱环境中，无法修改和读取本机工作区之外的重要文件。
+2. **安全隐患**: 彻底杜绝 AI 修改系统文件或执行恶意代码的风险，沙盒环境挂载你的 /skills （只读）目录和工作区 /share （读写）目录，恶意代码运行在沙箱环境中，无法修改和读取本机工作区之外的重要文件。
 
 ## ✨ 核心特性 (Features)
 
 | 特性 | 说明 |
 | :--- | :--- |
 | **📦 开箱即用 (Out of the Box)** | **Copy-Paste 兼容性**。直接复制 [anthropics/skills](https://github.com/anthropics/skills) 的文件夹或者社区 Skill ，无需修改一行代码即可运行。智能适配层会自动处理路径映射。 |
-| **🛡️ 沙盒隔离 (Sandbox Security)** | 所有代码均运行在用后即焚的**Docker 容器**中。Agent 只能访问挂载到本机的 `/skills` 和 `/share` 目录，宿主机系统绝对安全。 |
-| **🔋 全能环境 (Batteries Included)** | 预装 Python, Node , Pandas, Numpy, LibreOffice 等主流依赖。告别 `pip install` 的烦恼，专注于任务本身。 |
+| **🛡️ 沙盒隔离 (Sandbox Security)** | 所有代码均运行在用后即焚的**Docker 容器**中。Agent 只能访问挂载到本机的 /skills 和 /share 目录，宿主机系统绝对安全。 |
+| **🔋 全能环境 (Batteries Included)** | 预装 Python, Node , Pandas, Numpy, LibreOffice 等主流依赖。告别 pip install 的烦恼，专注于任务本身。 |
 
 ## 🔐 安全与架构设计 (Architecture & Design)
 
@@ -41,14 +41,14 @@ Open Skills 在安全性与易用性之间做了精心的平衡设计：
 
 Agent 在容器内以 **`agent` (uid=1000)** 用户身份运行，而非 Root。
 
-* **权限边界**: 剥夺了破坏系统（如 `apt-get`, `rm -rf /bin`）的能力，但保留了所有创造性工作（代码读写、脚本执行、`pip/npm install`）的权限。
-* **文件所有权**: `agent` 用户通过 Docker 挂载机制拥有 `/share` 工作区的完全读写权，确保 Agent 生成的文件在宿主机上也是普通用户权限，不会出现 "root user only" 的文件锁死问题。
+* **权限边界**: 剥夺了破坏系统（如 apt-get, rm -rf /bin）的能力，但保留了所有创造性工作（代码读写、脚本执行、pip/npm install）的权限。
+* **文件所有权**: agent 用户通过 Docker 挂载机制拥有 /share 工作区的完全读写权，确保 Agent 生成的文件在宿主机上也是普通用户权限，不会出现 "root user only" 的文件锁死问题。
 
 ### 2. 智能 Node.js 环境 (Smart Node Setup)
 
 为了解决 "Agent 想装包但没权限" 的经典死锁，我们采用了 **Environment Injection** 设计：
 
-* **无感知安装**: 配置 `NPM_CONFIG_PREFIX="/share/.npm-global"`，当 Agent 执行 `npm install package` 时，包会被自动安装到它有写权限的 `/share` 下。Agent 以为它在装全局包，实际上它在装用户包——**Zero Config, Zero Error**。
+* **无感知安装**: 配置 NPM_CONFIG_PREFIX="/share/.npm-global"，当 Agent 执行 npm install package 时，包会被自动安装到它有写权限的 /share 下。Agent 以为它在装全局包，实际上它在装用户包——**Zero Config, Zero Error**。
 
 ## 📂 目录与架构
 
@@ -73,7 +73,7 @@ open-skills/
 
 * 📚 **`manage_skills`**: **技能向导**。列出并查看可用技能的详细文档（自动注入沙盒路径）。
 * 💻 **`execute_command`**: **执行引擎**。在安全容器内运行 Bash 命令（Python, Node, Shell 等）。
-* 📂 **`read_file` / `write_file`**: **文件操作**。在工作区 (`cwd`) 安全地读写文件。
+* 📂 **`read_file` / `write_file`**: **文件操作**。在工作区安全地读写文件。
 * ☁️ **`upload_to_s3` / `download_from_s3`**: **云端传输**。配置 .env 后即可实现 agent 自动执行文件与 S3 的互传。
 * 👀 **`list_directory`**: **环境感知**。在工作区安全地列出目录内容，非 IDE 环境需要。
 
@@ -87,13 +87,13 @@ open-skills/
 
 **这能解决：**
 
-1. **空间感知**: 明确 `/share` 对应当前目录。
+1. **空间感知**: 明确 /share 对应当前目录。
 2. **标准流程**: 强制执行 "查文档 -> 写代码 -> 跑测试" 的 SOP。
 3. **权限自信**: 赋予 Agent 敢于在沙盒内执行命令的信心。
 
 ### ⚠️ 关于"元技能" (Meta-Skills)
 
-**请在沙盒环境测试后再进行转移** `skill-creator` 等让 AI 自己写技能的工具生成的 Skill 需要你手动从工作区转移至 `/skills` 目录。
+**请在沙盒环境测试后再进行转移** skill-creator 等让 AI 自己写Skill的工具生成的 Skill ，需要你手动从工作区转移至 /skills 目录。
 
 * **风险**: AI生成的脚本具有不确定性，直接在本机运行可能会产生风险。
 * **建议**: **人工审查代码，AI 执行操作**。
@@ -124,7 +124,7 @@ open-skills/
 
 ### 2. 配置 (Configuration)
 
-我们**强烈推荐**使用 `uvx` (无需手动安装 Python 环境) 直接运行。
+我们**强烈推荐**使用 uvx (无需手动安装 Python 环境) 直接运行。
 
 #### 🚀 推荐配置 (via uvx)
 
@@ -188,7 +188,7 @@ SSE 客户端配置：
 
 #### 模式 B: Stdio (本地源码运行)
 
-如果不使用 `uvx`，而是直接运行源码：
+如果不使用 uvx，而是直接运行源码：
 
 ##### 安装 (Install)
 
