@@ -126,7 +126,7 @@ docker build -t open-skills:latest open_skills/
     "open-skills": {
       "command": "uvx",
       "args": [
-        "open-skills-mcp",
+        "--from", "open-skills-mcp", "open-skills",
         "--skills-dir", "E:\\Your_Projects\\my-skills",  // [可选] 挂载本地 Skills 目录
         "--work-dir", "E:\\Your_Projects\\workspace"      // [可选] 指定工作区目录
       ],
@@ -140,7 +140,9 @@ docker build -t open-skills:latest open_skills/
 }
 ```
 
-> **注意**: `uvx` 会自动下载并运行最新版的 `open-skills-mcp`。
+> **注意**:
+> 使用 `uvx --from open-skills-mcp open-skills` 可以确保即使包名是 `open-skills-mcp`，也能正确调用 `open-skills` 命令。
+> `uvx` 会自动下载并运行最新版。
 
 ---
 

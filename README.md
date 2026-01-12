@@ -126,7 +126,7 @@ Add to your `claude_desktop_config.json` (Claude Desktop) or `mcp_config.json` (
     "open-skills": {
       "command": "uvx",
       "args": [
-        "open-skills-mcp",
+        "--from", "open-skills-mcp", "open-skills",
         "--skills-dir", "E:\\Your_Projects\\my-skills",  // [Optional] Mount local Skills directory
         "--work-dir", "E:\\Your_Projects\\workspace"      // [Optional] Specify workspace directory
       ],
@@ -140,7 +140,9 @@ Add to your `claude_desktop_config.json` (Claude Desktop) or `mcp_config.json` (
 }
 ```
 
-> **Note**: `uvx` will automatically download and run the latest version of `open-skills-mcp`.
+> **Note**:
+> Using `uvx --from open-skills-mcp open-skills` ensures that the `open-skills` command is correctly invoked even though the package name is `open-skills-mcp`.
+> `uvx` will automatically download and run the latest version.
 
 ---
 
