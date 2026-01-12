@@ -18,13 +18,13 @@ class SandboxManager:
     Manages a SINGLE ephemeral Docker container with enhanced security and path handling.
     """
     
-    IMAGE_NAME = "open-skills:latest"
+    IMAGE_NAME_DEFAULT = "forever17/open-skills:latest"
+    IMAGE_NAME_LOCAL = "open-skills:latest"
     CONTAINER_NAME_PREFIX = "open-skills-sandbox"
 
-    def __init__(self, 
-                 image_name: str = IMAGE_NAME):
+    def __init__(self):
         self.client = docker.from_env()
-        self.image_name = image_name
+        self.image_name = self._resolve_image()
         self.container = None
         
         # 1. Resolve Paths using PathLib (Host Side)
@@ -46,6 +46,44 @@ class SandboxManager:
         self.host_ip = self._get_host_ip()
         
         sys.stderr.write(f"[Sandbox] Init. Skills: {self.host_skill_path}, WorkDir: {self.host_work_dir}, HostIP: {self.host_ip}\n")
+
+
+    def _resolve_image(self) -> str:
+        """
+        Smart Image Resolution:
+        1. ENV 'OPEN_SKILLS_IMAGE'
+        2. Local 'open-skills:latest' (Dev/Manual Build)
+        3. Official 'forever17/open-skills:latest' (User Pull)
+        """
+        # 1. Check Env
+        env_img = os.getenv("OPEN_SKILLS_IMAGE")
+        if env_img:
+            sys.stderr.write(f"[Sandbox] Using configured image: {env_img}\n")
+            return env_img
+
+        # 2. Check Local Build (Dev Priority)
+        try:
+            self.client.images.get(self.IMAGE_NAME_LOCAL)
+            sys.stderr.write(f"[Sandbox] Found local build: {self.IMAGE_NAME_LOCAL}\n")
+            return self.IMAGE_NAME_LOCAL
+        except docker.errors.ImageNotFound:
+            pass
+
+        # 3. Check Official Pull
+        try:
+            self.client.images.get(self.IMAGE_NAME_DEFAULT)
+            sys.stderr.write(f"[Sandbox] Found official image: {self.IMAGE_NAME_DEFAULT}\n")
+            return self.IMAGE_NAME_DEFAULT
+        except docker.errors.ImageNotFound:
+            pass
+
+        # 4. Fail Gracefully
+        raise RuntimeError(
+            f"⛔ No Open Skills Docker image found!\n\n"
+            f"Please PREPARE the image using ONE of these methods:\n"
+            f"  A) Pull official:  docker pull {self.IMAGE_NAME_DEFAULT}\n"
+            f"  B) Build locally:  docker build -t {self.IMAGE_NAME_LOCAL} open_skills/\n"
+        )
 
     def _get_host_ip(self) -> str:
         """Detects the Host IP address accessible from Docker."""

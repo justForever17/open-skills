@@ -105,12 +105,20 @@ Since we have completely decoupled the system-level execution environment of Ski
 Since Open Skills runs in a secure, isolated Docker sandbox, this is a **mandatory** step:
 
 1. Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/).
-2. Build the sandbox image (only needs to be done once):
+2. Prepare the Image (**Choose One**):
 
-```powershell
-# Run in the source code directory
-docker build -t open-skills:latest open_skills/
-```
+    * **Option A: Pull Official Image (Recommended)**
+
+        ```powershell
+        docker pull forever17/open-skills:latest
+        ```
+
+    * **Option B: Build Manually (For Developers)**
+
+        ```powershell
+        # Run in the source code directory
+        docker build -t open-skills:latest open_skills/
+        ```
 
 ### 2. Configuration
 

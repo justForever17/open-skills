@@ -105,12 +105,20 @@ open-skills/
 本项目核心运行在安全隔离的 Docker 沙盒中，因此是**必选**步骤：
 
 1. 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并启动。
-2. 构建沙盒镜像（只需执行一次）：
+2. 准备镜像（**二选一**）：
 
-```powershell
-# 在源码目录下执行
-docker build -t open-skills:latest open_skills/
-```
+    * **选项 A：直接拉取 (推荐)**
+
+        ```powershell
+        docker pull forever17/open-skills:latest
+        ```
+
+    * **选项 B：手动构建 (开发者)**
+
+        ```powershell
+        # 在源码目录下执行
+        docker build -t open-skills:latest open_skills/
+        ```
 
 ### 2. 配置 (Configuration)
 
