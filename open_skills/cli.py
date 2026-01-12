@@ -34,16 +34,25 @@ mcp = FastMCP("v8chat-computer", dependencies=["docker", "boto3"])
 @mcp.tool()
 def upload_to_s3(filename: str) -> str:
     """
-    Uploads a file from the current workspace to S3 and returns a public URL.
+    Uploads a file from your Sandbox (`/share`) to S3 and returns a public URL.
     
-    Args:
-        filename: Name of the file in the workspace (relative to root).
+    [USAGE SOP]
+    1. **Source**: The file MUST strictly exist in your sandbox. 
+    2. **Path**: Provide the path relative to `/share`.
+       - Example: `output/report.pdf` (refers to `/share/output/report.pdf`).
+       - If you have `/share/data.csv`, just pass `data.csv`.
+    3. **Return**: A public HTTPS URL for the user to access.
     """
     try:
         # Resolve Path on Host via Sandbox Manager (Single User Mode)
         # sandbox_manager.host_work_dir is a Path object
         host_work_dir = sandbox_manager.host_work_dir
-        host_path = (host_work_dir / filename).resolve()
+        
+        # Robustness: Handle if agent passes "/share/..." prefix by stripping it
+        # This aligns code with the "Mental Model" that /share IS the root.
+        clean_filename = filename.replace("/share/", "").lstrip("/") if filename.startswith("/share/") else filename
+        
+        host_path = (host_work_dir / clean_filename).resolve()
         
         # Security Check: Ensure file is inside workspace
         if not host_path.is_relative_to(host_work_dir):
@@ -54,7 +63,7 @@ def upload_to_s3(filename: str) -> str:
         print(f"[Upload] Starting upload for {filename} (Path: {host_path})", file=sys.stderr)
 
         if not host_path.exists():
-            return f"Error: File '{filename}' not found in workspace."
+            return f"Error: File '{filename}' not found in /share. Did you `write_file` or `execute_command` to create it first?"
             
         # S3 Configuration
         endpoint = os.getenv("S3_ENDPOINT", os.getenv("S3_CUSTOM_DOMAIN"))
@@ -134,10 +143,12 @@ def upload_to_s3(filename: str) -> str:
 @mcp.tool()
 def download_from_s3(s3_key: str) -> str:
     """
-    Downloads a file from S3 to the current workspace.
+    Downloads a file from S3 to your Sandbox (`/share`).
     
-    Args:
-        s3_key: The S3 key or full URL.
+    [USAGE SOP]
+    1. **Purpose**: Retrieve remote files (e.g. user-provided URLs) into your workspace.
+    2. **Destination**: The file will disappear in `/share/{filename}`.
+    3. **Action**: After downloading, use `list_directory` or `read_file` to verify.
     """
     try:
         # Handle Full URL vs Key
@@ -183,7 +194,7 @@ def download_from_s3(s3_key: str) -> str:
                 for chunk in r.iter_content(chunk_size=8192): 
                     f.write(chunk)
         
-        return f"Successfully downloaded '{filename}' to workspace."
+        return f"Successfully downloaded '{filename}' to /share/{filename}."
         
     except Exception as e:
         return f"Download Failed: {str(e)}"
@@ -191,10 +202,22 @@ def download_from_s3(s3_key: str) -> str:
 @mcp.tool()
 def execute_command(command: str) -> str:
     """
-    Executes a shell command in the sandbox environment (mapped to current workspace).
-    
-    Args:
-        command: The shell command to execute.
+    Executes a shell command in the sandbox environment.
+
+    [CORE CONCEPT: DUAL SPACE]
+    - **Sandbox Space (Your Avatar)**: You are operating inside a Docker container.
+    - **Path Mapping**: `/share` inside the container == Your IDE's Project Root.
+    - **Permissions**: You are user `agent` (uid=1000). You have read/write access to `/share`, but NO root/sudo access.
+
+    [USAGE SOP - HARD SKILLS]
+    Use this tool when you need to:
+    1. Run Python scripts (e.g., `python /app/skills/xxx/script.py`).
+    2. Install dependencies (e.g., `pip install pandas` or `npm install axios`).
+    3. Perform file operations that `write_file` cannot handle (e.g., `unzip`, `tar`, `mv`).
+
+    [BEST PRACTICES]
+    - Always use **ABSOLUTE PATHS** for robust execution (e.g., `/share/data.csv`, `/app/skills/tool/run.py`).
+    - If a command fails due to missing dependencies, try `pip install` or `npm install` first (Self-Healing).
     """
     try:
         exit_code, output = sandbox_manager.execute_command(command)
@@ -207,10 +230,11 @@ def execute_command(command: str) -> str:
 @mcp.tool()
 def read_file(path: str) -> str:
     """
-    Reads a file from the sandbox filesystem (or workspace).
+    Reads a file from the sandbox filesystem.
     
-    Args:
-        path: Absolute path in the container (e.g. /share/file.txt).
+    [PATH MAPPING REMINDER]
+    - `/share/file.txt` corresponds to `file.txt` in your IDE project root.
+    - You can also read from the read-only skills library at `/app/skills`.
     """
     return sandbox_manager.read_file(path)
 
@@ -218,10 +242,10 @@ def read_file(path: str) -> str:
 def write_file(path: str, content: str) -> str:
     """
     Writes content to a file in the sandbox filesystem.
-    
-    Args:
-        path: Absolute path in the container.
-        content: Text content to write.
+
+    [PATH MAPPING REMINDER]
+    - Writing to `/share/output.txt` will immediately create `output.txt` in your IDE project root.
+    - Use this to prepare input files (e.g. `data.json`, `config.yaml`) BEFORE running a skill script.
     """
     return sandbox_manager.write_file(path, content)
 
@@ -229,10 +253,12 @@ def write_file(path: str, content: str) -> str:
 def list_directory(path: str = "/share") -> str:
     """
     Lists files and directories in the specified path (sandbox).
-    Default is /share (Workspace Root).
+    Default is `/share` (Your Workspace Root).
     
-    Args:
-        path: Absolute path in the container (e.g. /share or /share/subdir).
+    [CONTEXT RECOVERY]
+    - Use this tool to "see" what files are in your current workspace.
+    - Vital for checking if previous tasks generated the expected output files.
+    - If you are lost or resuming a task, always start by listing `/share`.
     """
     # Simply use execute_command("ls -F") for robust output
     # -F adds / to directories, * to executables, etc.
@@ -260,9 +286,17 @@ def manage_skills(action: str, skill_name: str = None) -> str:
     """
     The Librarian Tool to discover and learn skills.
     
-    Args:
-        action: 'list' (show all skills) or 'inspect' (read SKILL.md for a specific skill).
-        skill_name: Required if action is 'inspect'.
+    [COGNITIVE SOP - ON-DEMAND LOADING]
+    Do not guess! Always follow this strictly:
+    
+    1. **SEARCH**: Call `manage_skills(action='list')` to see what tools/SOPs are available.
+    2. **SELECT**: Pick the most suitable skill for your current problem (e.g. `guide/code-review` for reviewing, `data/analysis` for pandas).
+    3. **INSPECT**: Call `manage_skills(action='inspect', skill_name='...')` to read the `SKILL.md`.
+    4. **OBEY**: 
+       - If it's a **Code execution** skill: Follow the `SKILL.md` syntax to run it via `execute_command`.
+       - If it's a **Thinking/SOP** skill: Adopt the methodology described in `SKILL.md` as your temporary system prompt and execute the reasoning process.
+       
+    **CRITICAL**: You MUST strictly adhere to the instructions within `SKILL.md`. It is the source of truth.
     """
     skills_dir = sandbox_manager.host_skill_path
     
