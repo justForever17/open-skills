@@ -1,6 +1,6 @@
 [project]
-name = "open-skills"
-version = "0.1.0"
+name = "open-skills-mcp"
+version = "0.1.1"
 description = "A universal MCP skill runtime executing in a secure Docker sandbox."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -15,6 +15,7 @@ dependencies = [
 
 [project.scripts]
 open-skills = "open_skills.cli:main"
+open-skills-mcp = "open_skills.cli:main"
 
 [build-system]
 requires = ["hatchling"]

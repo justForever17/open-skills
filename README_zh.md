@@ -98,37 +98,76 @@ open-skills/
 
 ## ⚡ 快速开始 (Quick Start)
 
-### 1. 构建镜像 (Build Image)
+## ⚡ 快速开始 (Quick Start)
 
-这是**必选**步骤。为了极速启动，必须预先构建镜像：
+### 1. 准备工作 (Prerequisites)
+
+本项目核心运行在安全隔离的 Docker 沙盒中，因此是**必选**步骤：
+
+1. 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并启动。
+2. 构建沙盒镜像（只需执行一次）：
 
 ```powershell
+# 在源码目录下执行
 docker build -t open-skills:latest open_skills/
 ```
 
-### 2. 安装 (Install)
+### 2. 配置 (Configuration)
+
+我们**强烈推荐**使用 `uvx` (无需手动安装 Python 环境) 直接运行。
+
+#### 🚀 推荐配置 (via uvx)
+
+在您的 `claude_desktop_config.json` (Claude Desktop) 或 `mcp_config.json` (VS Code) 中添加：
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "command": "uvx",
+      "args": [
+        "open-skills-mcp",
+        "--skills-dir", "E:\\Your_Projects\\my-skills",  // [可选] 挂载本地 Skills 目录
+        "--work-dir", "E:\\Your_Projects\\workspace"      // [可选] 指定工作区目录
+      ],
+      "env": {
+        // [可选] 如果需要 S3 功能
+        "S3_ENDPOINT": "...",
+        "S3_ACCESS_KEY": "..."
+      }
+    }
+  }
+}
+```
+
+> **注意**: `uvx` 会自动下载并运行最新版的 `open-skills-mcp`。
+
+---
+
+<details>
+<summary><strong>🔧 开发安装 (Development Installation)</strong></summary>
+
+如果您是开发者，希望通过源码运行或调试：
+
+### 1. 安装 (Install)
 
 ```powershell
-cd apps/open-skills
+git clone https://github.com/justForever17/open-skills.git
+cd open-skills
 pip install -e .
 ```
 
-// 卸载 pip uninstall open-skills
+### 2. 运行模式 (Running Modes)
 
-### 3. 配置 MCP (Configure)
+#### 模式 A: SSE (推荐用于开发调试)
 
-我们推荐使用 **SSE (Server-Sent Events)** 模式，它支持远程连接且调试更方便。
-
-#### 🚀 模式 A: SSE (推荐 - HTTP Server)
-
-首先，启动 HTTP 服务：
+启动 HTTP 服务：
 
 ```bash
-# 使用 uvicorn 启动 (需 pip install uvicorn)
 uvicorn open_skills.cli:mcp.sse_app --port 8000
 ```
 
-然后，在支持 SSE 的客户端中配置：
+SSE 客户端配置：
 
 ```json
 {
@@ -140,29 +179,11 @@ uvicorn open_skills.cli:mcp.sse_app --port 8000
 }
 ```
 
-#### 📁 工作区绑定 (Workspace Binding)
+#### 模式 B: Stdio (本地源码运行)
 
-默认情况下，工作区绑定在您运行 `uvicorn` 命令的当前目录。
-要指定其他目录，请使用项目根目录下的 `.env` 文件：
+如果不使用 `uvx`，而是直接运行源码：
 
-1. 复制模板：`cp env.template .env`
-2. 修改配置：
-
-```bash
-# .env
-HOST_WORK_DIR="E:\Your_Projects"
-```
-
-<details>
-<summary><strong>模式 B: Stdio (兼容模式 - Claude Desktop / VSCode)</strong></summary>
-
-这是最通用的模式，服务随宿主应用自动启动。
-
-**关键点**: 必须显式指定 `cwd` (当前工作目录)，否则生成的文件会跑到用户主目录去！
-
-#### Windows
-
-在 `claude_desktop_config.json` 中添加：
+**Windows**:
 
 ```json
 {
@@ -170,13 +191,13 @@ HOST_WORK_DIR="E:\Your_Projects"
     "open-skills": {
       "command": "python",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "E:\\Your_Projects" 
+      "cwd": "E:\\Projects\\open-skills" // 源码目录
     }
   }
 }
 ```
 
-#### macOS / Linux
+**macOS / Linux**:
 
 ```json
 {
@@ -184,7 +205,7 @@ HOST_WORK_DIR="E:\Your_Projects"
     "open-skills": {
       "command": "python3",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "/home/user/projects/your-project"
+      "cwd": "/path/to/open-skills"
     }
   }
 }

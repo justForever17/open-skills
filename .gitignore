@@ -21,3 +21,4 @@ venv/
 # Logs
 *.log
 GEMINI.md
+dist/

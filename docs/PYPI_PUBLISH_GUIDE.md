@@ -30,6 +30,7 @@
 * 在 [PyPI](https://pypi.org/) 上注册账号。
 * 开启双重认证 (2FA)。
 * 生成 API Token（权限范围选 "Entire account"）。
+.venv\Scripts\twine upload dist/* --username **token** --password pypi-yourtoken
 
 ### 2. 配置 `pyproject.toml`
 

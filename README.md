@@ -98,35 +98,76 @@ Since we have completely decoupled the system-level execution environment of Ski
 
 ## ⚡ Quick Start
 
-### 1. Build Image (Required)
+## ⚡ Quick Start
 
-This is a **mandatory** step. To ensure fast startup, the image must be pre-built:
+### 1. Prerequisites
+
+Since Open Skills runs in a secure, isolated Docker sandbox, this is a **mandatory** step:
+
+1. Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+2. Build the sandbox image (only needs to be done once):
 
 ```powershell
+# Run in the source code directory
 docker build -t open-skills:latest open_skills/
 ```
 
-### 2. Install
+### 2. Configuration
+
+We **strongly recommend** using `uvx` (no need to manually install Python environment) to run directly.
+
+#### 🚀 Recommended Configuration (via uvx)
+
+Add to your `claude_desktop_config.json` (Claude Desktop) or `mcp_config.json` (VS Code):
+
+```json
+{
+  "mcpServers": {
+    "open-skills": {
+      "command": "uvx",
+      "args": [
+        "open-skills-mcp",
+        "--skills-dir", "E:\\Your_Projects\\my-skills",  // [Optional] Mount local Skills directory
+        "--work-dir", "E:\\Your_Projects\\workspace"      // [Optional] Specify workspace directory
+      ],
+      "env": {
+        // [Optional] If S3 features are needed
+        "S3_ENDPOINT": "...",
+        "S3_ACCESS_KEY": "..."
+      }
+    }
+  }
+}
+```
+
+> **Note**: `uvx` will automatically download and run the latest version of `open-skills-mcp`.
+
+---
+
+<details>
+<summary><strong>🔧 Development Installation</strong></summary>
+
+If you are a developer and want to run or debug from source code:
+
+### 1. Install
 
 ```powershell
-cd apps/open-skills
+git clone https://github.com/justForever17/open-skills.git
+cd open-skills
 pip install -e .
 ```
 
-### 3. Configure MCP
+### 2. Running Modes
 
-We recommend using **SSE (Server-Sent Events)** mode as it supports remote connections and is easier to debug.
+#### Mode A: SSE (Recommended for Development/Debugging)
 
-#### 🚀 Mode A: SSE (Recommended - HTTP Server)
-
-First, start the HTTP server:
+Start the HTTP service:
 
 ```bash
-# Requires uvicorn (pip install uvicorn)
 uvicorn open_skills.cli:mcp.sse_app --port 8000
 ```
 
-Then, configure your client:
+SSE Client Configuration:
 
 ```json
 {
@@ -138,29 +179,11 @@ Then, configure your client:
 }
 ```
 
-#### 📁 Workspace Binding
+#### Mode B: Stdio (Local Source Run)
 
-By default, the workspace is bound to the current directory where you run `uvicorn`.
-To specify a different directory, use the `.env` file in the project root:
+If you don't use `uvx` and want to run the source code directly:
 
-1. Copy template: `cp env.template .env`
-2. Update config:
-
-```bash
-# .env
-HOST_WORK_DIR="E:\Your_Projects"
-```
-
-<details>
-<summary><strong>Mode B: Stdio (Legacy - Claude Desktop / VSCode)</strong></summary>
-
-This is the standard mode where the server starts automatically with the host app.
-
-**Critical Point**: You MUST explicitly specify `cwd` (Current Working Directory), otherwise generated files will end up in your home directory!
-
-#### Windows
-
-Add to `claude_desktop_config.json`:
+**Windows**:
 
 ```json
 {
@@ -168,13 +191,13 @@ Add to `claude_desktop_config.json`:
     "open-skills": {
       "command": "python",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "E:\\Your_Projects" 
+      "cwd": "E:\\Projects\\open-skills" // Source code directory
     }
   }
 }
 ```
 
-#### macOS / Linux
+**macOS / Linux**:
 
 ```json
 {
@@ -182,7 +205,7 @@ Add to `claude_desktop_config.json`:
     "open-skills": {
       "command": "python3",
       "args": ["-m", "open_skills.cli"],
-      "cwd": "/home/user/projects/your-project"
+      "cwd": "/path/to/open-skills"
     }
   }
 }
