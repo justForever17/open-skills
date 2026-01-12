@@ -22,3 +22,4 @@ venv/
 *.log
 GEMINI.md
 dist/
+docs/QA
