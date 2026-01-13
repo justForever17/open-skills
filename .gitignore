@@ -23,5 +23,5 @@ venv/
 GEMINI.md
 dist/
 docs/QA
-open_skills\skills
-open_skills\skill
+open_skills/skills/
+open_skills/skill/
