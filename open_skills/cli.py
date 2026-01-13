@@ -431,9 +431,22 @@ def main():
     sys.argv = [sys.argv[0]] + unknown
 
     # Run via Stdio (Standard Input/Output) for direct integration
+    
+    # Signal Handling: Catch Ctrl+C (SIGINT) and Kill (SIGTERM) from IDEs
+    import signal
+    
+    def handle_signal(signum, frame):
+        sys.stderr.write(f"\n[Lifecycle] Received signal {signum}. forcing sandbox cleanup...\n")
+        sandbox_manager.stop()
+        sys.exit(0)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+
     try:
         mcp.run()
     finally:
+        # Fallback for normal exit or unhandled exceptions
         sys.stderr.write("[Lifecycle] Shutting down... cleaning up sandbox.\n")
         sandbox_manager.stop()
 
