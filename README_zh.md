@@ -1,6 +1,6 @@
 <div align="center">
 
-# ![Open Skills MCP](docs/assets/header.png)
+<a href="https://github.com/justForever17/open-skills"><img src="docs/assets/header.png" width="50%" alt="Open Skills MCP" /></a>
 
 ### Secure, Standardized, "Copy-Paste" Compatible Agent Skills Runtime
 
@@ -157,6 +157,7 @@ open-skills/
 
 > **注意**:
 > 必须配置这两个参数："--skills-dir" 挂载本地 Skills 目录**必选**，"--work-dir" 手动指定你的工作区目录**必选**。
+> **已知限制**: 使用 `uvx` 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 `docker rm -f open-skills-sandbox` 或在 Docker Desktop 中点击删除。
 
 ---
 
@@ -238,3 +239,15 @@ Made with ❤️ for the Agentic Future
 ## 📄 开源协议 (License)
 
 本项目基于 [MIT License](LICENSE) 开源。
+
+## 💖 赞助 (Sponsorship)
+
+维护开源项目不易，如果您觉得 open-skills 对您有帮助，欢迎请作者喝杯咖啡！
+
+<div align="center">
+
+| 平台 | 链接 | 支付方式 |
+| :--- | :--- | :--- |
+| **爱发电 (Afdian)** | [![Afdian](https://img.shields.io/badge/Afdian-支持我-946ce6?logo=afdian)](https://afdian.com/a/justforever17) | 微信, 支付宝 |
+
+</div>

@@ -1,6 +1,6 @@
 <div align="center">
 
-# ![Open Skills MCP](docs/assets/header.png)
+<a href="https://github.com/justForever17/open-skills"><img src="docs/assets/header.png" width="50%" alt="Open Skills MCP" /></a>
 
 ### Secure, Standardized, "Copy-Paste" Compatible Agent Skills Runtime
 
@@ -155,8 +155,7 @@ Add to your mcp_config.json (Google Antigravity) or any AI tool that supports th
 }
 ```
 
-> **Note**:
-> You must configure these two parameters: "--skills-dir" (Mount local Skills directory) is **Required**, "--work-dir" (Manually specify your workspace directory) is **Required**.
+> **Known Limitation**: When running with `uvx`, closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run `docker rm -f open-skills-sandbox` or delete it via Docker Desktop.
 
 ---
 
@@ -238,3 +237,15 @@ Made with ❤️ for the Agentic Future
 ## 📄 License
 
 This project is licensed under the [MIT License](LICENSE).
+
+## 💖 Sponsorship
+
+Maintaining open source projects is hard. If you find open-skills helpful, please consider buying me a coffee!
+
+<div align="center">
+
+| Platform | Link | Payment Methods |
+| :--- | :--- | :--- |
+| **Aifadian (Afdian)** | [![Afdian](https://img.shields.io/badge/Afdian-Support-946ce6?logo=afdian)](https://afdian.com/a/justforever17) | WeChat, Alipay |
+
+</div>
