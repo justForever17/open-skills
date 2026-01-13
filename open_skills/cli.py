@@ -431,7 +431,11 @@ def main():
     sys.argv = [sys.argv[0]] + unknown
 
     # Run via Stdio (Standard Input/Output) for direct integration
-    mcp.run()
+    try:
+        mcp.run()
+    finally:
+        sys.stderr.write("[Lifecycle] Shutting down... cleaning up sandbox.\n")
+        sandbox_manager.stop()
 
 # --- LIFECYCLE MANAGEMENT MONKEYPATCH ---
 # Goal: Ensure sandbox container starts WHEN SERVER STARTS, and stops WHEN SERVER STOPS.
