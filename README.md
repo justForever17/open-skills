@@ -73,7 +73,8 @@ Once connected to the Open Skills MCP service, your Agent gains the following su
 
 * 📚 **`manage_skills`**: **Skills Librarian**. List and view detailed documentation for available skills (with automatic sandbox path injection).
 * 💻 **`execute_command`**: **Execution Engine**. Run Bash commands (Python, Node, Shell, etc.) inside the secure container.
-* 📂 **`read_file` / `write_file`**: **File Operations**. Securely read and write files in the workspace.
+* 📂 **`read_file` / `write_file`**: **File Operations**. Securely read and write files in the workspace (read_file supports pagination).
+* 🧱 **`append_file`**: **Large File Append**. Append content in chunks to bypass LLM output token limits.
 * ☁️ **`upload_to_s3` / `download_from_s3`**: **Cloud Transfer**. After configuring .env, the agent can automatically transfer files to and from S3.
 * 👀 **`list_directory`**: **Environment Perception**. Securely list directory contents in the workspace, needed for non-IDE environments.
 

@@ -215,8 +215,11 @@ class SandboxManager:
         
         return exit_code, stdout + stderr
 
-    def read_file(self, path: str) -> str:
-        """Reads a file from the sandbox with security check."""
+    def read_file(self, path: str, start_line: int = 1, line_count: int = 0) -> str:
+        """
+        Reads a file from the sandbox with security check and pagination support.
+        line_count=0 means read 'all remaining' (subject to strict safety limits if implemented later).
+        """
         # 1. Security Check
         # We assume 'path' is absolute inside container. If relative, treat as relative to /share
         if not path.startswith("/"):
@@ -238,8 +241,43 @@ class SandboxManager:
                 member = tar.getmembers()[0]
                 if not member.isfile():
                      return "Error: Target is not a file."
+                
                 f = tar.extractfile(member)
-                return f.read().decode('utf-8', errors='ignore')
+                if not f:
+                    return "Error: Could not extract file content."
+
+                # Perform paginated read
+                # Decode line by line to handle large files efficiently
+                # Note: tarfile stream is bytes.
+                
+                wrapper = io.TextIOWrapper(f, encoding='utf-8', errors='ignore')
+                
+                lines = []
+                current_line = 0
+                lines_read = 0
+                
+                for line in wrapper:
+                    current_line += 1
+                    
+                    # Skip until start_line
+                    if current_line < start_line:
+                        continue
+                        
+                    lines.append(line)
+                    lines_read += 1
+                    
+                    # Stop if we hit line_count limit
+                    if line_count > 0 and lines_read >= line_count:
+                        break
+                
+                content = "".join(lines)
+                
+                # Metadata footer for context
+                total_hint = ""
+                if line_count > 0 and lines_read >= line_count:
+                    total_hint = f"\n\n[System Alert]: Tuncated after {lines_read} lines. Total keys in file unknown (streamed)."
+                 
+                return content
         except Exception as e:
             return f"Error reading file {safe_path}: {str(e)}"
 
@@ -270,7 +308,48 @@ class SandboxManager:
         except Exception as e:
             return f"Error writing file: {str(e)}"
 
-    
+            return f"Error writing file: {str(e)}"
+
+    def append_file(self, path: str, content: str) -> str:
+        """Appends content to a file in the sandbox by writing a temp chunk and concatenating."""
+        # 1. Security Check
+        if not path.startswith("/"):
+             path = f"/share/{path}"
+        
+        safe_path = self.validate_path(path, allow_read_skills=False)
+        
+        # 2. Strategy: 
+        #   a. Write 'content' to a temporary filename in the SAME directory (to ensure permissions/volume correct)
+        #   b. Execute 'cat temp >> target'
+        #   c. Execute 'rm temp'
+        
+        import uuid
+        dirname = os.path.dirname(safe_path)
+        filename = os.path.basename(safe_path)
+        temp_name = f".tmp_append_{uuid.uuid4().hex[:8]}"
+        
+        # Determine strict path for temp file (use posix style for container logic)
+        # safe_path is the HOST resolved path? No, validate_path returns logical path? 
+        # Wait, validate_path returns PurePosixPath string.
+        # So safe_path is like "/share/draft.html"
+        
+        container_dir = os.path.dirname(safe_path) # e.g. /share
+        container_temp_path = f"{container_dir}/{temp_name}"
+        
+        # 3. Write Config Chunk (Re-use existing write logic but to temp)
+        res = self.write_file(container_temp_path, content)
+        if "Error" in res:
+            return f"Append Failed (Temp Write): {res}"
+            
+        # 4. Concatenate
+        # Force bash to ensure redirection works
+        cmd = f"cat {container_temp_path} >> {safe_path} && rm {container_temp_path}"
+        exit_code, output = self.execute_command(cmd)
+        
+        if exit_code != 0:
+            return f"Append Failed (Concatenate): {output}"
+            
+        return "Success"
     def stop(self):
         """Stops and removes the sandbox container."""
         if self.container:

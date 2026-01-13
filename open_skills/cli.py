@@ -228,15 +228,19 @@ def execute_command(command: str) -> str:
         return f"Execution Error: {str(e)}"
 
 @mcp.tool()
-def read_file(path: str) -> str:
+def read_file(path: str, start_line: int = 1, line_count: int = 3000) -> str:
     """
     Reads a file from the sandbox filesystem.
     
     [PATH MAPPING REMINDER]
     - `/share/file.txt` corresponds to `file.txt` in your IDE project root.
     - You can also read from the read-only skills library at `/app/skills`.
+    
+    [PAGINATION SOP - IMPORTANT]
+    - Default `line_count` is 3000 to prevent output overflow.
+    - If the file is larger, call `read_file` again with `start_line=3001`.
     """
-    return sandbox_manager.read_file(path)
+    return sandbox_manager.read_file(path, start_line, line_count)
 
 @mcp.tool()
 def write_file(path: str, content: str) -> str:
@@ -246,8 +250,24 @@ def write_file(path: str, content: str) -> str:
     [PATH MAPPING REMINDER]
     - Writing to `/share/output.txt` will immediately create `output.txt` in your IDE project root.
     - Use this to prepare input files (e.g. `data.json`, `config.yaml`) BEFORE running a skill script.
+    
+    [WARNING - LARGE FILES]
+    - If you are writing a large file (approx > 200 lines or > 10KB), you MUST use `append_file` instead.
+    - This tool will fail for large payloads due to JSON protocol limits.
     """
     return sandbox_manager.write_file(path, content)
+
+@mcp.tool()
+def append_file(path: str, content: str) -> str:
+    """
+    Appends content to an existing file in the sandbox.
+
+    [USAGE SOP - LARGE FILES]
+    Use this tool when you need to write LARGE content that might fail JSON parsing (e.g. >10kb text).
+    1. First call `write_file` with the first chunk (or empty string "" to create file).
+    2. Then call `append_file` repeatedly with subsequent chunks.
+    """
+    return sandbox_manager.append_file(path, content)
 
 @mcp.tool()
 def list_directory(path: str = "/share") -> str:

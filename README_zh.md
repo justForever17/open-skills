@@ -73,7 +73,8 @@ open-skills/
 
 * 📚 **`manage_skills`**: **技能向导**。列出并查看可用技能的详细文档（自动注入沙盒路径）。
 * 💻 **`execute_command`**: **执行引擎**。在安全容器内运行 Bash 命令（Python, Node, Shell 等）。
-* 📂 **`read_file` / `write_file`**: **文件操作**。在工作区安全地读写文件。
+* 📂 **`read_file` / `write_file`**: **文件操作**。在工作区安全地读写文件（read_file 支持分页防止 Context 溢出）。
+* 🧱 **`append_file`**: **大文件追加**。专用于解决 LLM 输出 Token 限制，支持分块写入超大文件。
 * ☁️ **`upload_to_s3` / `download_from_s3`**: **云端传输**。配置 .env 后即可实现 agent 自动执行文件与 S3 的互传。
 * 👀 **`list_directory`**: **环境感知**。在工作区安全地列出目录内容，非 IDE 环境需要。
 
