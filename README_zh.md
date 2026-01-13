@@ -157,7 +157,7 @@ open-skills/
 
 > **注意**:
 > 必须配置这两个参数："--skills-dir" 挂载本地 Skills 目录**必选**，"--work-dir" 手动指定你的工作区目录**必选**。
-> **已知限制**: 使用 `uvx` 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 `docker rm -f open-skills-sandbox` 或在 Docker Desktop 中点击删除。
+> **已知限制**: 使用 "uvx" 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 "docker rm -f open-skills-sandbox" 或在 Docker Desktop 中点击删除。
 
 ---
 

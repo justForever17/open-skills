@@ -155,7 +155,9 @@ Add to your mcp_config.json (Google Antigravity) or any AI tool that supports th
 }
 ```
 
-> **Known Limitation**: When running with `uvx`, closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run `docker rm -f open-skills-sandbox` or delete it via Docker Desktop.
+> **Note**:
+> These two parameters must be configured.："--skills-dir" Mount the local "Skills" directory**Mandatory**，"--work-dir" Manually specify your workspace directory**Mandatory**。
+> **Known Limitation**: When running with "uvx", closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run "docker rm -f open-skills-sandbox" or delete it via Docker Desktop.
 
 ---
 
