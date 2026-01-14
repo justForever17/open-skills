@@ -17,6 +17,15 @@
 
 > **"Open Skills"** 是为了解决 Claude code 的 Skills 功能在各种差异化环境中可能出现的脚本运行失败等依赖地狱，以及直接在本机运行社区未知 Skill 代码带来的安全隐患。我将 Anthropic 强大的 Skills 协议完美复刻为即插即用的 MCP 模式，并将其封装在一个**安全、隔离、开箱即用**的 Docker 沙盒中，让你在任何支持 MCP 的 AI 应用中都能畅享 Skills 的强大。
 
+<div align="center">
+  <a href="https://x.com/omg3moon7/status/2011264287961145524">
+    <img src="https://img.shields.io/badge/X-Watch_Demo_Video-000000?logo=x&style=for-the-badge" alt="Watch Demo Video" />
+  </a>
+  <br/>
+  <br/>
+  <img src="docs/assets/Demonstration.png" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" alt="Open Skills Demonstration" />
+</div>
+
 ## 🚀 核心使命 (Mission)
 
 Open Skills 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的通用技能运行时。它旨在让任何支持 MCP 的 AI 应用（如 Google Antigravity, Cursor, Windsurf）能够快速接入火爆的 Skills 能力，并安全地执行复杂任务，同时解决两大痛点：

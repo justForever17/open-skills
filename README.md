@@ -17,6 +17,15 @@
 
 > **"Open Skills"** was born to solve the dependency hell where Claude Code's Skills functionality might fail in various differentiated environments, and the security risks of running unknown community Skill code directly on the local machine. I have perfectly replicated Anthropic's powerful Skills protocol as a plug-and-play MCP mode and encapsulated it in a **secure, isolated, out-of-the-box** Docker sandbox, allowing you to enjoy the power of Skills in any AI application that supports MCP.
 
+<div align="center">
+  <a href="https://x.com/omg3moon7/status/2011264287961145524">
+    <img src="https://img.shields.io/badge/X-Watch_Demo_Video-000000?logo=x&style=for-the-badge" alt="Watch Demo Video" />
+  </a>
+  <br/>
+  <br/>
+  <img src="docs/assets/Demonstration.png" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);" alt="Open Skills Demonstration" />
+</div>
+
 ## 🚀 Mission
 
 Open Skills is a generic skills runtime based on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). It aims to enable any MCP-supported AI application (such as Google Antigravity, Cursor, Windsurf) to quickly access popular Skills capabilities and securely execute complex tasks, while addressing two major pain points:
