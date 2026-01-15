@@ -2,7 +2,7 @@
 
 <a href="https://github.com/justForever17/open-skills"><img src="docs/assets/header.png" width="50%" alt="Open Skills MCP" /></a>
 
-### Secure, Standardized, "Copy-Paste" Compatible Agent Skills Runtime
+### Plug-and-Play, Secure Sandbox, "Agent Skills" Universal Module
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
@@ -28,7 +28,32 @@
 
 ## 🚀 Mission
 
-Open Skills is a generic skills runtime based on the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/). It aims to enable any MCP-supported AI application (such as Google Antigravity, Cursor, Windsurf) to quickly access popular Skills capabilities and securely execute complex tasks, while addressing two major pain points:
+**Open Skills is NOT a specific "Skill", but a true universal "Agent Skills" module.**
+
+Following Anthropic's release of Claude Code, its powerful "Skills" extension mechanism left a strong impression. However, these Skills are currently limited to the official Claude Code CLI tool. **Open Skills** was born to break this wall, replicating Anthropic's Skills protocol as a generic **MCP (Model Context Protocol)** service.
+
+This means: You can now directly load and run the community's rich Skills resources in **Trae**, **Windsurf**, or any MCP-supported AI application with a workspace-less environment, while enjoying enterprise-grade Docker sandbox isolation.
+
+### 🆚 Comparison (Claude Code vs Open Skills)
+
+| Feature | Claude Code (Official CLI) | Open Skills (MCP Server) |
+| :--- | :--- | :--- |
+| **Positioning** | Official Terminal Agent Tool | Generic MCP Protocol Extension Service |
+| **Environment** | Limited to officially supported AI tools | **Any MCP-supported Tool (NoteGen, Windsurf, etc)** |
+| **Skills Source** | Official/Local Skills Folder | Perfectly Compatible with Official Skills Structure (Copy-Paste) |
+| **Runtime** | Runs directly on Host (Risky) | **Docker Isolated Sandbox (Absolutely Safe)** |
+| **Dependencies** | Requires local pip/npm install | **Sandbox Pre-installed + Temporary Install (Zero Pollution)** |
+| **Context Loading** | Progressive (Metadata -> Content) | **Progressive (manage_skills: list -> inspect)** |
+
+### 🛠️ How it works
+
+Open Skills is not simply "executing scripts", but a complete replication of the Agent Skills lifecycle:
+
+1. **Discovery**: Attributes to `manage_skills` tool to read Skill header metadata, allowing the Agent to know "what capabilities I have" with minimal Token consumption.
+2. **Progressive Loading**: When the Agent decides to use a skill, it calls `manage_skills` again to retrieve the full SOP (Standard Operating Procedure) and script instructions, mirroring the official "Progressive Disclosure" mechanism.
+3. **Execution**: The Skill documentation (`SKILL.md`) itself serves as a high-quality execution plan. The Agent follows the document steps strictly within the Docker sandbox calling `execute_command` to complete tasks.
+
+This design perfectly solves two major pain points:
 
 1. **Dependency Hell**: No more need to configure complex Python environments for every script, or have an agent install a massive amount of unknown dependency packages on your local machine due to execution failures. The sandbox comes pre-installed with necessary dependencies and grants the agent temporary permission to install packages, purifying your local environment.
 
@@ -67,7 +92,7 @@ open-skills/
 │   ├── cli.py                 # MCP Server entry point
 │   ├── sandbox.py             # Docker container manager
 │   ├── Dockerfile             # Batteries-included image definition
-│   └── skills/                # Skills library (Put your Skills here)
+│    ├── skills/                # Skills Library (Only for dev; UVX mounts any dir via args)
 ├── docs/                      # [Docs] Documentation & Guides
 │   ├── EN/                    # English Documentation
 │   └── ZH/                    # Chinese Documentation
@@ -80,7 +105,7 @@ open-skills/
 
 Once connected to the Open Skills MCP service, your Agent gains the following superpowers:
 
-* 📚 **`manage_skills`**: **Skills Librarian**. List and view detailed documentation for available skills (with automatic sandbox path injection).
+* 📚 **`manage_skills`**: **Skills Librarian**. Adopts a **Progressive Loading** mechanism: first reads the header descriptions of all Skills to let the Agent quickly perceive capabilities (list), then reads the full documentation as execution SOP upon selection (inspect). The Skill documentation itself IS the plan, so no extra planning mode is needed.
 * 💻 **`execute_command`**: **Execution Engine**. Run Bash commands (Python, Node, Shell, etc.) inside the secure container.
 * 📂 **`read_file` / `write_file`**: **File Operations**. Securely read and write files in the workspace (read_file supports pagination).
 * 🧱 **`append_file`**: **Large File Append**. Append content in chunks to bypass LLM output token limits.
@@ -115,6 +140,7 @@ Since we have completely decoupled the system-level execution environment of Ski
 Since Open Skills runs in a secure, isolated Docker sandbox, this is a **mandatory** step:
 
 1. Install and start [Docker Desktop](https://www.docker.com/products/docker-desktop/).
+    > **v0.2.2 Update**: **Lazy Connection** is supported. You can start the MCP service without Docker (entering Offline Mode), and connect to Docker only when the Agent actually executes a task. This prevents IDE crashes caused by service startup failures.
 2. Prepare the Image (**Choose One**):
 
     * **Option A: Pull Official Image (Recommended)**
@@ -164,11 +190,11 @@ Add to your mcp_config.json (Google Antigravity) or any AI tool that supports th
 }
 ```
 
-> **Note**:
+* **Parameters are Mandatory**: "--skills-dir" Mount local Skills directory (Any location) **Required**, "--work-dir" Manually specify your workspace directory (Must match your IDE workspace) **Required**.
 
-> These two parameters must be configured: "--skills-dir" Mount local Skills directory (Any location) **Required**, "--work-dir" Manually specify your workspace directory (Must match your IDE workspace) **Required**.
+* **Known Limitation**: When running with "uvx", closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run "docker rm -f open-skills-sandbox" or delete it via Docker Desktop.
 
-> **Known Limitation**: When running with "uvx", closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run "docker rm -f open-skills-sandbox" or delete it via Docker Desktop.
+* **IDE Task Mode**: It is recommended NOT to use Planning, Task, or Spec based Agent task modes. These modes enforce a defined task flow. Skills need to be executed strictly according to SKILL.md. **SKILL.md IS the definition of the Plan** that must be strictly adhered to and does not need to be redefined. This is often the culprit when Agents in Claude Code occasionally fail to follow the **SKILL.md** flow.
 
 ---
 

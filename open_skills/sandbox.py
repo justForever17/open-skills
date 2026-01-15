@@ -23,8 +23,15 @@ class SandboxManager:
     CONTAINER_NAME_PREFIX = "open-skills-sandbox"
 
     def __init__(self):
-        self.client = docker.from_env()
-        self.image_name = self._resolve_image()
+        self.image_name = self.IMAGE_NAME_DEFAULT # Default fallback
+        try:
+            self.client = docker.from_env()
+            self.image_name = self._resolve_image()
+            sys.stderr.write(f"[Sandbox] Docker connected. Image: {self.image_name}\n")
+        except Exception as e:
+            self.client = None
+            sys.stderr.write(f"[Sandbox] Warning: Docker not running ({e}). Starting in Offline Mode.\n")
+
         self.container = None
         
         # 1. Resolve Paths using PathLib (Host Side)
@@ -46,6 +53,28 @@ class SandboxManager:
         self.host_ip = self._get_host_ip()
         
         sys.stderr.write(f"[Sandbox] Init. Skills: {self.host_skill_path}, WorkDir: {self.host_work_dir}, HostIP: {self.host_ip}\n")
+
+    def _ensure_connection(self) -> bool:
+        """
+        Lazy Reconnect: Checks if Docker is reachable. If not, attempts to connect.
+        Returns True if connected, False otherwise.
+        """
+        if self.client:
+            try:
+                self.client.ping()
+                return True
+            except:
+                self.client = None
+        
+        # Attempt Reconnect
+        try:
+            self.client = docker.from_env()
+            # If we just connected, we might want to resolve image now if it wasn't valid 
+            # (But careful not to block too long. _resolve_image might be slow. 
+            #  Let's trust _start_sandbox to check image.)
+            return True
+        except:
+            return False
 
 
     def _resolve_image(self) -> str:
@@ -130,6 +159,9 @@ class SandboxManager:
 
     def get_sandbox(self):
         """Gets or starts the single sandbox container."""
+        if not self._ensure_connection():
+             raise RuntimeError("Docker is not running. Please start Docker Desktop.")
+
         if self.container:
             try:
                 self.container.reload()
@@ -201,7 +233,13 @@ class SandboxManager:
 
     def execute_command(self, command: str) -> Tuple[int, str]:
         """Executes a command inside the sandbox."""
-        container = self.get_sandbox()
+        if not self._ensure_connection():
+             return 1, "Error: Docker is not running. Please start Docker Desktop and retry."
+
+        try:
+            container = self.get_sandbox()
+        except Exception as e:
+            return 1, f"Error: Failed to get sandbox: {e}"
             
         sys.stderr.write(f"[Exec] {command}\n")
         exit_code, output = container.exec_run(
@@ -220,6 +258,8 @@ class SandboxManager:
         Reads a file from the sandbox with security check and pagination support.
         line_count=0 means read 'all remaining' (subject to strict safety limits if implemented later).
         """
+        if not self._ensure_connection():
+             return "Error: Docker is not running. Please start Docker Desktop and retry."
         # 1. Security Check
         # We assume 'path' is absolute inside container. If relative, treat as relative to /share
         if not path.startswith("/"):
@@ -228,7 +268,11 @@ class SandboxManager:
         # Validate (Allows reading from Skills too)
         safe_path = self.validate_path(path, allow_read_skills=True)
 
-        container = self.get_sandbox()
+        try:
+            container = self.get_sandbox()
+        except Exception as e:
+             return f"Error: Failed to get sandbox: {e}"
+
         try:
             stream, stat = container.get_archive(safe_path)
             file_obj = io.BytesIO()
@@ -283,6 +327,8 @@ class SandboxManager:
 
     def write_file(self, path: str, content: str) -> str:
         """Writes a file to the sandbox with security check."""
+        if not self._ensure_connection():
+             return "Error: Docker is not running. Please start Docker Desktop and retry."
         # 1. Security Check
         if not path.startswith("/"):
              path = f"/share/{path}"
@@ -290,7 +336,10 @@ class SandboxManager:
         # Validate (Only allow write to /share)
         safe_path = self.validate_path(path, allow_read_skills=False)
 
-        container = self.get_sandbox()
+        try:
+            container = self.get_sandbox()
+        except Exception as e:
+            return f"Error: Failed to get sandbox: {e}"
             
         tar_stream = io.BytesIO()
         with tarfile.open(fileobj=tar_stream, mode='w') as tar:
@@ -312,6 +361,8 @@ class SandboxManager:
 
     def append_file(self, path: str, content: str) -> str:
         """Appends content to a file in the sandbox by writing a temp chunk and concatenating."""
+        if not self._ensure_connection():
+             return "Error: Docker is not running. Please start Docker Desktop and retry."
         # 1. Security Check
         if not path.startswith("/"):
              path = f"/share/{path}"
@@ -352,7 +403,7 @@ class SandboxManager:
         return "Success"
     def stop(self):
         """Stops and removes the sandbox container."""
-        if self.container:
+        if self.client and self.container:
             try:
                 sys.stderr.write(f"[Sandbox] Stopping container {self.container.name}...\n")
                 self.container.stop()

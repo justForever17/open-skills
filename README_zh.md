@@ -2,7 +2,7 @@
 
 <a href="https://github.com/justForever17/open-skills"><img src="docs/assets/header.png" width="50%" alt="Open Skills MCP" /></a>
 
-### Secure, Standardized, "Copy-Paste" Compatible Agent Skills Runtime
+### 即插即用, 安全隔离, "Agent Skills"通用模块
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
@@ -28,10 +28,34 @@
 
 ## 🚀 核心使命 (Mission)
 
-Open Skills 是一个基于 [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) 的通用技能运行时。它旨在让任何支持 MCP 的 AI 应用（如 Google Antigravity, Cursor, Windsurf）能够快速接入火爆的 Skills 能力，并安全地执行复杂任务，同时解决两大痛点：
+**Open Skills 不是某一个"技能"，而是一个真正的"Agent Skills"通用模块**
+
+在 Anthropic 发布 Claude Code 后，其强大的 "Skills" 扩展机制令人印象深刻。但目前 Skills 仅能在部分AI工具中使用。**Open Skills** 的诞生，旨在打破这一围墙，它将 Anthropic 的 Skills 协议复刻为通用的 **MCP (Model Context Protocol)** 服务。
+
+这意味着：你现在可以在 **Trae**, **Windsurf** 等 AI coding 工具或任何支持 MCP 的无工作区环境的AI应用中，直接加载和运行社区丰富的 Skills 资源，并享受到企业级的 Docker 沙盒隔离保护。
+
+### 🆚 对比 (Claude Code vs Open Skills)
+
+| 功能特性 | Claude Code (官方 CLI) | Open Skills (MCP Server) |
+| :--- | :--- | :--- |
+| **定位** | 官方终端 Agent 工具 | 通用 MCP 协议扩展服务 |
+| **适用环境** | 仅限部分宣布支持的AI工具 | **任何支持 MCP 的工具 (NoteGen, Windsurf, etc)** |
+| **Skills 来源** | 官方/本地 Skills 文件夹 | 完美兼容官方 Skills 结构 (Copy-Paste) |
+| **运行环境** | 本机直接运行 (存在风险) | **Docker 隔离沙盒 (绝对安全)** |
+| **依赖管理** | 需本机 pip/npm install | **沙盒预装 + 临时安装 (不污染本机)** |
+| **上下文加载** | 渐进式 (元数据 -> 完整内容) | **渐进式 (manage_skills: list -> inspect)** |
+
+### 🛠️ 工作原理 (How it works)
+
+Open Skills 并不是简单地"执行脚本"，而是完整复刻了 Agent Skills 的生命周期：
+
+1. **能力感知 (Discovery)**: 通过 `manage_skills` 工具读取 Skill 头部元数据，Agent 仅凭极小的 Token 消耗即可知道"我有能力做什么"。
+2. **按需加载 (Progressive Loading)**: 当 Agent 决定使用某项技能时，再次调用 `manage_skills` 获取完整 SOP (Standard Operating Procedure) 和脚本说明，这与官方的 "Progressive Disclosure" 机制异曲同工。
+3. **依案执行 (Execution)**: 这里的 Skill 文档 (`SKILL.md`) 本身就是一份高质量的执行计划 (Plan)，Agent 在 Docker 沙盒中严格按照文档步骤调用 `execute_command` 完成任务。
+
+这种设计完美解决了两大痛点：
 
 1. **依赖地狱**: 不再需要为每个脚本配置复杂的 Python 环境，或者 agent 因为运行失败给你的本机安装大量不明依赖包，沙盒里预装了必要依赖并给予 agent 临时安装依赖包的权限，净化你的本机环境。
-
 2. **安全隐患**: 彻底杜绝 AI 修改系统文件或执行恶意代码的风险，沙盒环境挂载你的 /skills （只读）目录和工作区 /share （读写）目录，恶意代码运行在沙箱环境中，无法修改和读取本机工作区之外的重要文件。
 
 ## ✨ 核心特性 (Features)
@@ -67,7 +91,7 @@ open-skills/
 │   ├── cli.py                 # MCP Server 入口
 │   ├── sandbox.py             # Docker 容器管理器
 │   ├── Dockerfile             # 全能镜像定义
-│   └── skills/                # 技能库 (在这里放入你的 Skills)
+│   └── skills/                # 技能库 (仅开发环境需要放在这里，UVX安装用参数挂载任意目录)
 ├── docs/                      # [Docs] 文档与指南
 │   ├── EN/                    # 英文文档
 │   └── ZH/                    # 中文文档
@@ -80,7 +104,7 @@ open-skills/
 
 连接 Open Skills MCP 服务后，您的 Agent 将获得以下超能力：
 
-* 📚 **`manage_skills`**: **技能向导**。列出并查看可用技能的详细文档（自动注入沙盒路径）。
+* 📚 **`manage_skills`**: **技能向导**。采用 **渐进式加载** 机制：首先读取所有 Skills 的头部描述让 Agent 快速感知能力边界 (list)，选定后再读取完整文档作为执行 SOP (inspect)。Skill 文档本身即是高质量 Plan，无需额外的规划模式。
 * 💻 **`execute_command`**: **执行引擎**。在安全容器内运行 Bash 命令（Python, Node, Shell 等）。
 * 📂 **`read_file` / `write_file`**: **文件操作**。在工作区安全地读写文件（read_file 支持分页防止 Context 溢出）。
 * 🧱 **`append_file`**: **大文件追加**。专用于解决 LLM 输出 Token 限制，支持分块写入超大文件。
@@ -115,6 +139,7 @@ open-skills/
 本项目核心运行在安全隔离的 Docker 沙盒中，因此是**必选**步骤：
 
 1. 安装 [Docker Desktop](https://www.docker.com/products/docker-desktop/) 并启动。
+    > **v0.2.2 更新**: 支持 **惰性连接 (Lazy Connection)**。你可以在不启动 Docker 的情况下启动 MCP 服务（进入离线模式），仅在 Agent 真正执行任务时才需要连接 Docker。这将解决 IDE 因服务启动失败而崩溃的问题。
 2. 准备镜像（**二选一**）：
 
     * **选项 A：直接拉取 (推荐)**
@@ -166,9 +191,11 @@ open-skills/
 
 **注意**:
 
-> 必须配置这两个参数："--skills-dir" 挂载本地 Skills 目录（任意位置）**必选**，"--work-dir" 手动指定你的工作区目录（与你IDE的工作区一致）**必选**。
+* **必须配置这两个参数**："--skills-dir" 挂载本地 Skills 目录（任意位置）**必选**，"--work-dir" 手动指定你的工作区目录（与你IDE的工作区一致）**必选**。
 
-> **已知限制**: 使用 "uvx" 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 "docker rm -f open-skills-sandbox" 或在 Docker Desktop 中点击删除。
+* **已知限制**: 使用 "uvx" 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 "docker rm -f open-skills-sandbox" 或在 Docker Desktop 中点击删除。
+
+* **IDE任务模式**: 建议不要使用 Planning、Task、Spec 等 Agent 任务模式，这些模式会强制定义任务流程，Skills 需要严格按照 SKILL.md 执行，**SKILL.md** 就是需要严格遵守的 **Plan**，不需要被二次定义，这也是在 Claude code 中 Agent 偶尔会不按照 **SKILL.md** 的流程执行任务的元凶。
 
 ---
 
