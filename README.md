@@ -172,7 +172,7 @@ Add to your mcp_config.json (Google Antigravity) or any AI tool that supports th
     "open-skills": {
       "command": "uvx",
       "args": [
-        "--from", "open-skills-mcp", "open-skills",
+        "open-skills-mcp",
         "--skills-dir", "E:\\Your_Projects\\skills",  // [Required] Mount local Skills directory
         "--work-dir", "E:\\Your_Projects\\workspace"      // [Required] Specify workspace directory
       ],
@@ -192,7 +192,7 @@ Add to your mcp_config.json (Google Antigravity) or any AI tool that supports th
 
 * **Parameters are Mandatory**: "--skills-dir" Mount local Skills directory (Any location) **Required**, "--work-dir" Manually specify your workspace directory (Must match your IDE workspace) **Required**.
 
-* **Known Limitation**: When running with "uvx", closing the IDE might not correctly propagate the exit signal, leaving the Docker container running. If this happens, please manually run "docker rm -f open-skills-sandbox" or delete it via Docker Desktop.
+* **Known Limitation**: When running in the "uvx" mode, closing the IDE may fail to properly transmit the exit signal, resulting in residual Docker containers. When switching workspaces, you must manually clean up the container using "docker rm -f open-skills-sandbox" or click to delete it in Docker Desktop. The container will be automatically recreated after restarting the client.
 
 * **IDE Task Mode**: It is recommended NOT to use Planning, Task, or Spec based Agent task modes. These modes enforce a defined task flow. Skills need to be executed strictly according to SKILL.md. **SKILL.md IS the definition of the Plan** that must be strictly adhered to and does not need to be redefined. This is often the culprit when Agents in Claude Code occasionally fail to follow the **SKILL.md** flow.
 

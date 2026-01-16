@@ -171,7 +171,7 @@ open-skills/
     "open-skills": {
       "command": "uvx",
       "args": [
-        "--from", "open-skills-mcp", "open-skills",
+        "open-skills-mcp",
         "--skills-dir", "E:\\Your_Projects\\skills",  // [必选] 挂载本地 Skills 目录
         "--work-dir", "E:\\Your_Projects\\workspace"      // [必选] 指定工作区目录
       ],
@@ -193,7 +193,7 @@ open-skills/
 
 * **必须配置这两个参数**："--skills-dir" 挂载本地 Skills 目录（任意位置）**必选**，"--work-dir" 手动指定你的工作区目录（与你IDE的工作区一致）**必选**。
 
-* **已知限制**: 使用 "uvx" 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。若发生此情况，请手动运行 "docker rm -f open-skills-sandbox" 或在 Docker Desktop 中点击删除。
+* **已知限制**: 使用 "uvx" 方式运行时，IDE 关闭可能无法正确传递退出信号，导致 Docker 容器残留。更换工作区时，必须手动**清理容器** "docker rm -f open-skills-sandbox" 或在 Docker Desktop 中点击删除。重启客户端后会自动重新创建容器。
 
 * **IDE任务模式**: 建议不要使用 Planning、Task、Spec 等 Agent 任务模式，这些模式会强制定义任务流程，Skills 需要严格按照 SKILL.md 执行，**SKILL.md** 就是需要严格遵守的 **Plan**，不需要被二次定义，这也是在 Claude code 中 Agent 偶尔会不按照 **SKILL.md** 的流程执行任务的元凶。
 
